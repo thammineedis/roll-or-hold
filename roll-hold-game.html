@@ -1,0 +1,2517 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Roll or Hold — 2 Player Dice Game</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    /* ==========================================================================
+       CSS Custom Properties & Houdini @property for 3D CSS Random Dice Physics
+       ========================================================================== */
+    @property --roll { syntax: '<number>'; inherits: true; initial-value: 1; }
+    @property --dx   { syntax: '<length>'; inherits: true; initial-value: 0px; }
+    @property --dy   { syntax: '<length>'; inherits: true; initial-value: 0px; }
+    @property --rz   { syntax: '<angle>';  inherits: true; initial-value: 0deg; }
+    @property --tx   { syntax: '<number>'; inherits: true; initial-value: 2; }
+    @property --ty   { syntax: '<number>'; inherits: true; initial-value: -2; }
+    @property --fx   { syntax: '<angle>';  inherits: false; initial-value: 0deg; }
+    @property --fy   { syntax: '<angle>';  inherits: false; initial-value: 0deg; }
+
+    :root {
+      --bg-outer: #0b0f19;
+      --cobalt: oklch(0.32 0.14 265);
+      --tray-bg: oklch(0.21 0.09 266);
+      --ink: oklch(0.18 0.06 270);
+      --lemon: oklch(0.93 0.17 100);
+      --lemon-shadow: oklch(0.68 0.15 95);
+      --paper: oklch(0.985 0.006 270);
+      --rose: oklch(0.63 0.25 18);
+      --mint: oklch(0.78 0.17 155);
+      --muted: oklch(0.78 0.04 270);
+      --line: oklch(0.45 0.12 266);
+
+      --f-display: 'Dela Gothic One', 'Arial Black', Impact, sans-serif;
+      --f-body: 'Instrument Sans', system-ui, -apple-system, sans-serif;
+      --die: clamp(62px, 15vw, 76px);
+      color-scheme: dark;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    [hidden] {
+      display: none !important;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      width: 100%;
+      background: var(--bg-outer);
+      color: var(--paper);
+      font-family: var(--f-body);
+      overflow: hidden;
+      user-select: none;
+    }
+
+    button, input, select {
+      font: inherit;
+      color: inherit;
+    }
+
+    :focus-visible {
+      outline: 3px solid var(--lemon);
+      outline-offset: 2px;
+    }
+
+    /* ==========================================================================
+       Mobile-First Centered Shell (100dvh)
+       ========================================================================== */
+    .phone-shell {
+      position: relative;
+      width: 100%;
+      max-width: 480px;
+      height: 100dvh;
+      margin: 0 auto;
+      background: var(--cobalt);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 0 60px rgba(0, 0, 0, 0.75);
+    }
+
+    @media (min-width: 500px) {
+      body {
+        display: grid;
+        place-items: center;
+        padding: 12px;
+      }
+      .phone-shell {
+        height: min(900px, calc(100dvh - 24px));
+        border-radius: 36px;
+        border: 3px solid oklch(0.45 0.14 266);
+      }
+    }
+
+    /* ==========================================================================
+       Top Utility Bar (Always visible with Settings & Mode Actions)
+       ========================================================================== */
+    .topbar {
+      flex: 0 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      padding: calc(10px + env(safe-area-inset-top, 0px)) 16px 10px;
+      background: transparent;
+      z-index: 10;
+    }
+
+    .brand-mini {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand-dot {
+      width: 11px;
+      height: 11px;
+      border-radius: 4px;
+      background: var(--lemon);
+      display: inline-block;
+    }
+
+    .brand-title {
+      font-family: var(--f-display);
+      font-size: 0.92rem;
+      letter-spacing: 0.02em;
+    }
+
+    .target-badge {
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: oklch(0.34 0.14 266);
+      color: var(--lemon);
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .icon-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      min-height: 32px;
+      min-width: 32px;
+      line-height: 100%;
+      padding: 0 6px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: oklch(0.3 0.11 266);
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: transform 0.1s ease, background 0.15s ease, border-color 0.15s ease;
+    }
+
+    .icon-btn:active {
+      transform: scale(0.95);
+    }
+
+    .icon-btn svg {
+      width: 18px;
+      height: 18px;
+      fill: currentColor;
+    }
+
+    /* ==========================================================================
+       Screen 1: Start Screen + Animated Tutorial
+       ========================================================================== */
+    .start-screen {
+      flex: 1 1 auto;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 14px 16px calc(18px + env(safe-area-inset-bottom, 0px));
+      gap: 12px;
+      overflow-y: auto;
+      background:
+        radial-gradient(circle at 85% 12%, oklch(0.45 0.22 265 / 0.45), transparent 50%),
+        radial-gradient(circle at 15% 88%, oklch(0.93 0.17 100 / 0.12), transparent 50%),
+        var(--cobalt);
+    }
+
+    .start-top-stack {
+      display: grid;
+      gap: 12px;
+    }
+
+    .start-bottom-stack {
+      display: grid;
+      gap: 10px;
+      margin-top: auto;
+    }
+
+    .hero-block {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 12px;
+      padding: 1rem 0;
+    }
+
+    .hero-die-icon {
+      width: 44px;
+      height: 44px;
+      flex: none;
+      border-radius: 13px;
+      background: var(--paper);
+      display: grid;
+      place-items: center;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35), inset 0 -3px 0 oklch(0.85 0.03 270);
+      transform: rotate(-8deg);
+    }
+
+    .hero-die-icon span {
+      width: 13px;
+      height: 13px;
+      border-radius: 50%;
+      background: var(--rose);
+      box-shadow: inset 0 2px 3px rgba(0, 0, 0, 0.3);
+    }
+
+    .hero-text {
+      text-align: center;
+    }
+
+    .hero-block h1 {
+      font: 400 clamp(2rem, 6vw, 2.5rem)/1 var(--f-display);
+      margin: 0 0 .75rem;
+    }
+
+    .hero-block p {
+      margin: 0;
+      font-size: 1.2rem;
+      line-height: 1.5;
+      color: var(--muted);
+    }
+
+    .hero-block strong {
+      color: var(--lemon);
+    }
+
+    /* Interactive 6-Step Animated Tutorial Card */
+    .tutorial-card {
+      background: oklch(0.24 0.1 266 / 0.92);
+      border: 1.5px solid var(--line);
+      border-radius: 22px;
+      padding: 13px 14px;
+      display: grid;
+      gap: 10px;
+      box-shadow: 0 10px 26px rgba(0, 0, 0, 0.28);
+    }
+
+    .tut-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .tut-badge {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--lemon);
+    }
+
+    .tut-controls {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .tut-btn {
+      height: 26px;
+      padding: 0 9px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: oklch(0.3 0.12 266);
+      font-size: 0.72rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .tut-btn:active {
+      transform: scale(0.94);
+    }
+
+    .tut-stage {
+      background: oklch(0.18 0.08 266);
+      border: 1px solid oklch(0.36 0.12 266);
+      border-radius: 16px;
+      padding: 9px 10px;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 8px;
+      transition: border-color 0.25s ease, background-color 0.25s ease;
+    }
+
+    .tut-stage.is-bust {
+      border-color: var(--rose);
+      background: oklch(0.24 0.14 18 / 0.55);
+      animation: shake 0.38s ease-in-out;
+    }
+
+    .tut-stage.is-win {
+      border-color: var(--lemon);
+      background: oklch(0.28 0.15 265);
+    }
+
+    .tut-player {
+      border-radius: 12px;
+      padding: 7px 8px;
+      background: oklch(0.24 0.08 266);
+      border: 1.5px solid transparent;
+      display: grid;
+      gap: 4px;
+      transition: all 0.3s ease;
+    }
+
+    .tut-player.active {
+      background: oklch(0.34 0.17 265);
+      border-color: var(--lemon);
+      box-shadow: 0 0 14px oklch(0.93 0.17 100 / 0.22);
+    }
+
+    .tut-player.dull {
+      opacity: 0.55;
+    }
+
+    .tut-p-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+
+    .tut-p-tag {
+      font-size: 0.62rem;
+      padding: 1px 5px;
+      border-radius: 999px;
+      background: oklch(0.2 0.07 266);
+      color: var(--muted);
+    }
+
+    .tut-player.active .tut-p-tag {
+      background: var(--lemon);
+      color: var(--ink);
+    }
+
+    .tut-p-score {
+      font-size: 1.05rem;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      line-height: 1.1;
+    }
+
+    .tut-p-score small {
+      font-size: 0.68rem;
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    .tut-p-bar {
+      height: 5px;
+      border-radius: 999px;
+      background: oklch(0.16 0.06 266);
+      overflow: hidden;
+    }
+
+    .tut-p-fill {
+      height: 100%;
+      width: 0%;
+      background: var(--lemon);
+      border-radius: 999px;
+      transition: width 0.35s ease;
+    }
+
+    .tut-mini-btns {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px;
+      margin-top: 2px;
+    }
+
+    .tut-mini-btn {
+      font-size: 0.62rem;
+      font-weight: 700;
+      text-align: center;
+      padding: 3px 2px;
+      border-radius: 999px;
+      background: oklch(0.2 0.08 266);
+      color: var(--muted);
+      border: 1px solid oklch(0.35 0.1 266);
+    }
+
+    .tut-player.active .tut-mini-btn.roll {
+      background: var(--lemon);
+      color: var(--ink);
+      border-color: var(--lemon);
+    }
+
+    .tut-player.active .tut-mini-btn.hold {
+      border-color: var(--paper);
+      color: var(--paper);
+    }
+
+    .tut-mini-btn.trigger {
+      animation: tutBtnTap 0.55s cubic-bezier(.22, .7, .3, 1);
+      box-shadow: 0 0 0 3px oklch(0.93 0.17 100 / 0.45);
+    }
+
+    .tut-mini-btn.hold.trigger {
+      background: var(--mint);
+      color: var(--ink);
+      border-color: var(--mint);
+    }
+
+    @keyframes tutBtnTap {
+      0%   { transform: scale(1); }
+      35%  { transform: scale(0.86); }
+      70%  { transform: scale(1.08); }
+      100% { transform: scale(1); }
+    }
+
+    .tut-center {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      min-width: 72px;
+    }
+
+    .tut-die {
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      background: var(--paper);
+      box-shadow: 0 5px 12px rgba(0, 0, 0, 0.4), inset 0 -3px 0 oklch(0.85 0.03 270);
+      display: grid;
+      grid-template: repeat(3, 1fr) / repeat(3, 1fr);
+      padding: 6px;
+    }
+
+    .tut-die.pop {
+      animation: tutDiePop 0.42s cubic-bezier(.22, .7, .3, 1);
+    }
+
+    @keyframes tutDiePop {
+      0%   { transform: scale(0.72) rotate(-28deg); }
+      60%  { transform: scale(1.12) rotate(8deg); }
+      100% { transform: scale(1) rotate(0deg); }
+    }
+
+    .tut-die .tp {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--ink);
+      place-self: center;
+      opacity: 0;
+    }
+
+    .tut-die[data-val="1"] .tp5,
+    .tut-die[data-val="2"] :is(.tp1, .tp9),
+    .tut-die[data-val="3"] :is(.tp1, .tp5, .tp9),
+    .tut-die[data-val="4"] :is(.tp1, .tp3, .tp7, .tp9),
+    .tut-die[data-val="5"] :is(.tp1, .tp3, .tp5, .tp7, .tp9),
+    .tut-die[data-val="6"] :is(.tp1, .tp3, .tp4, .tp6, .tp7, .tp9) {
+      opacity: 1;
+    }
+
+    .tut-die[data-val="1"] .tp5 {
+      background: var(--rose);
+      width: 10px;
+      height: 10px;
+    }
+
+    .tut-bank-chip {
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 999px;
+      background: oklch(0.28 0.13 266);
+      border: 1px solid oklch(0.5 0.15 266);
+      color: var(--lemon);
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .tut-bank-chip.bust {
+      background: oklch(0.45 0.22 18);
+      border-color: var(--rose);
+      color: #fff;
+    }
+
+    .tut-action-pill {
+      font-size: 0.64rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--lemon);
+    }
+
+    .tut-caption {
+      margin: 0;
+      font-size: 0.78rem;
+      line-height: 1.4;
+      color: var(--muted);
+    }
+
+    .tut-caption strong {
+      color: var(--paper);
+    }
+
+    .tut-caption .danger {
+      color: var(--rose);
+      font-weight: 700;
+    }
+
+    .tut-dots {
+      display: flex;
+      justify-content: center;
+      gap: 5px;
+    }
+
+    .tut-dot {
+      width: 18px;
+      height: 5px;
+      padding: 0;
+      border: 0;
+      border-radius: 999px;
+      background: oklch(0.36 0.1 266);
+      cursor: pointer;
+      transition: background-color 0.2s ease, width 0.2s ease;
+    }
+
+    .tut-dot.active {
+      width: 28px;
+      background: var(--lemon);
+    }
+
+    /* Mode Selection Cards */
+    .mode-cards {
+      display: grid;
+      gap: 10px;
+    }
+
+    .mode-card {
+      display: flex;
+      align-items: center;
+      gap: 13px;
+      width: 100%;
+      padding: 13px 16px;
+      border-radius: 20px;
+      border: 2px solid var(--line);
+      background: oklch(0.28 0.12 266);
+      text-align: left;
+      cursor: pointer;
+      transition: transform 0.12s ease, border-color 0.2s ease, background 0.2s ease;
+    }
+
+    .mode-card:hover, .mode-card.selected {
+      border-color: var(--lemon);
+      background: oklch(0.35 0.17 265);
+    }
+
+    .mode-card:active {
+      transform: scale(0.98);
+    }
+
+    .mode-icon {
+      flex: 0 0 44px;
+      height: 44px;
+      border-radius: 13px;
+      background: oklch(0.42 0.19 265);
+      color: var(--lemon);
+      display: grid;
+      place-items: center;
+    }
+
+    .mode-card.selected .mode-icon {
+      background: var(--lemon);
+      color: var(--ink);
+    }
+
+    .mode-icon svg {
+      width: 24px;
+      height: 24px;
+    }
+
+    .mode-info {
+      flex: 1 1 auto;
+    }
+
+    .mode-info b {
+      display: block;
+      font-size: 1.04rem;
+      font-weight: 700;
+      margin-bottom: 1px;
+    }
+
+    .mode-info span {
+      display: block;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    /* Friend Name Setup Form */
+    .friend-setup {
+      background: oklch(0.25 0.1 266);
+      border: 2px solid var(--lemon);
+      border-radius: 20px;
+      padding: 14px;
+      display: grid;
+      gap: 11px;
+      animation: slideUp 0.22s ease-out;
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .input-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .field {
+      display: grid;
+      gap: 4px;
+    }
+
+    .field label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--lemon);
+    }
+
+    .field input {
+      width: 100%;
+      min-height: 42px;
+      padding: 7px 11px;
+      border-radius: 12px;
+      border: 2px solid var(--line);
+      background: oklch(0.2 0.08 266);
+      font-weight: 600;
+      font-size: 0.92rem;
+    }
+
+    .field input:focus {
+      outline: none;
+      border-color: var(--lemon);
+    }
+
+    .start-match-btn {
+      min-height: 48px;
+      width: 100%;
+      border-radius: 999px;
+      border: 0;
+      background: var(--lemon);
+      color: var(--ink);
+      font-weight: 700;
+      font-size: 1.02rem;
+      cursor: pointer;
+      box-shadow: 0 5px 0 var(--lemon-shadow);
+      transition: transform 0.1s ease, box-shadow 0.1s ease;
+    }
+
+    .start-match-btn:active {
+      transform: translateY(4px);
+      box-shadow: 0 1px 0 var(--lemon-shadow);
+    }
+
+    /* ==========================================================================
+       Fixed Centered Settings Modal
+       ========================================================================== */
+    .settings-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 60;
+      background: oklch(0.12 0.06 266 / 0.78);
+      backdrop-filter: blur(6px);
+      display: grid;
+      place-items: center;
+      padding: 20px;
+      animation: fadeIn 0.18s ease-out;
+    }
+
+    .settings-modal {
+      width: 100%;
+      max-width: 340px;
+      background: oklch(0.23 0.1 266);
+      border: 2px solid var(--lemon);
+      border-radius: 24px;
+      padding: 18px;
+      display: grid;
+      gap: 14px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.65);
+      animation: slideUp 0.2s ease-out;
+    }
+
+    .settings-modal-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .settings-modal-head h3 {
+      margin: 0;
+      font-family: var(--f-display);
+      font-size: 1.05rem;
+      color: var(--lemon);
+    }
+
+    .modal-close-btn {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      border: 1px solid var(--line);
+      background: oklch(0.3 0.12 266);
+      font-weight: 700;
+      font-size: 0.9rem;
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+    }
+
+    .set-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 0.84rem;
+      font-weight: 600;
+    }
+
+    .set-select {
+      background: oklch(0.28 0.12 266);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 6px 9px;
+      font-size: 0.8rem;
+      color: var(--paper);
+      max-width: 175px;
+    }
+
+    .switch-btn {
+      min-width: 56px;
+      height: 28px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: oklch(0.3 0.12 266);
+      font-size: 0.74rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .switch-btn.on {
+      background: var(--lemon);
+      color: var(--ink);
+      border-color: var(--lemon);
+    }
+
+    /* ==========================================================================
+       Screen 2: Vertically Divided 2-Player Split Arena
+       - Expanded player score & action blocks
+       - Dulls ONLY buttons on inactive turn
+       - Compact ~50% reduced central dice roll tray
+       ========================================================================== */
+    .arena {
+      flex: 1 1 auto;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 12px calc(12px + env(safe-area-inset-bottom, 0px));
+      min-height: 0;
+    }
+
+    .player-zone {
+      flex: 1 1 36%;
+      position: relative;
+      border-radius: 24px;
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 10px;
+      transition:
+        background-color 0.3s ease,
+        border-color 0.3s ease,
+        box-shadow 0.3s ease,
+        transform 0.3s ease;
+    }
+
+    .player-zone.top-zone.flipped {
+      transform: rotate(180deg);
+    }
+
+    .player-zone.active {
+      background: linear-gradient(160deg, oklch(0.41 0.21 265), oklch(0.32 0.17 266));
+      border: 2px solid var(--lemon);
+      box-shadow: 0 0 24px oklch(0.93 0.17 100 / 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.16);
+      z-index: 2;
+    }
+
+    .player-zone.dull {
+      background: oklch(0.26 0.09 266);
+      border: 1.5px solid var(--line);
+      z-index: 1;
+    }
+
+    .pz-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .pz-identity {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .turn-indicator {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--lemon);
+      box-shadow: 0 0 10px var(--lemon);
+      flex: none;
+      opacity: 0;
+      transform: scale(0.5);
+      transition: opacity 0.25s ease, transform 0.25s ease;
+    }
+
+    .player-zone.active .turn-indicator {
+      opacity: 1;
+      transform: scale(1);
+      animation: pulseDot 1.4s infinite ease-in-out;
+    }
+
+    @keyframes pulseDot {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50%      { transform: scale(1.35); opacity: 0.7; }
+    }
+
+    .pz-name {
+      font-weight: 700;
+      font-size: 1.08rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .pz-badge {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: oklch(0.22 0.08 266);
+      color: var(--muted);
+      flex: none;
+    }
+
+    .player-zone.active .pz-badge {
+      background: var(--lemon);
+      color: var(--ink);
+    }
+
+    /* Clear Side-by-Side Saved Score & Current Turn Stat Cards */
+    .pz-metrics {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      align-items: stretch;
+      gap: 10px;
+    }
+
+    .pz-stat-box {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 8px 12px;
+      border-radius: 16px;
+      background: oklch(0.2 0.08 266 / 0.85);
+      border: 1px solid oklch(0.42 0.12 266);
+    }
+
+    .player-zone.active .pz-stat-box.bank-box {
+      border-color: var(--lemon);
+      background: oklch(0.23 0.12 266);
+    }
+
+    .pz-stat-label {
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+      margin-bottom: 2px;
+    }
+
+    .pz-total {
+      display: flex;
+      align-items: baseline;
+      gap: 5px;
+    }
+
+    .pz-score {
+      font-family: var(--f-body);
+      font-weight: 700;
+      font-size: clamp(2.15rem, 8.5vw, 2.75rem);
+      line-height: 0.95;
+      letter-spacing: -0.03em;
+      color: var(--paper);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .pz-goal {
+      font-size: 0.86rem;
+      font-weight: 600;
+      color: var(--muted);
+    }
+
+    .pz-bank-val {
+      font-family: var(--f-body);
+      font-weight: 700;
+      font-size: clamp(1.65rem, 6.5vw, 2.05rem);
+      line-height: 1;
+      color: var(--lemon);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .pz-track {
+      height: 8px;
+      background: oklch(0.19 0.08 266);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .pz-fill {
+      height: 100%;
+      width: 0%;
+      background: var(--lemon);
+      border-radius: 999px;
+      transition: width 0.45s cubic-bezier(.3, .8, .3, 1);
+    }
+
+    .pz-actions {
+      display: grid;
+      grid-template-columns: 1.25fr 1fr;
+      gap: 10px;
+    }
+
+    .act-btn {
+      min-height: 52px;
+      padding: 10px 16px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 1.04rem;
+      cursor: pointer;
+      border: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: transform 0.1s ease, box-shadow 0.1s ease, opacity 0.25s ease, filter 0.25s ease;
+    }
+
+    .act-btn.roll {
+      background: var(--lemon);
+      color: var(--ink);
+      box-shadow: 0 4px 0 var(--lemon-shadow);
+    }
+
+    .act-btn.roll:active:not(:disabled) {
+      transform: translateY(3px);
+      box-shadow: 0 1px 0 var(--lemon-shadow);
+    }
+
+    .act-btn.hold {
+      background: oklch(0.26 0.11 266);
+      color: var(--paper);
+      border: 1.5px solid var(--paper);
+    }
+
+    .act-btn.hold:active:not(:disabled) {
+      transform: translateY(2px);
+    }
+
+    .act-btn:disabled {
+      opacity: 0.28;
+      filter: grayscale(0.85);
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    /* ==========================================================================
+       Compact Central 3D Dice Tray (~50% Reduced Height)
+       ========================================================================== */
+    .center-tray {
+      flex: 0 0 clamp(240px, 30dvh, 260px);
+      min-height: 240px;
+      position: relative;
+      background:
+        radial-gradient(circle at center, oklch(0.28 0.12 266 / 0.6), transparent 72%),
+        var(--tray-bg);
+      border-radius: 24px;
+      border: 2px solid oklch(0.4 0.15 266);
+      box-shadow: inset 0 8px 24px rgba(0, 0, 0, 0.45);
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+    }
+
+    .specks {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .speck {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 2px;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background: var(--muted);
+      opacity: 0.15;
+    }
+
+    .status-banner {
+      position: absolute;
+      bottom: 7px;
+      left: 12px;
+      right: 12px;
+      text-align: center;
+      font-size: 0.74rem;
+      font-weight: 600;
+      color: var(--paper);
+      background: oklch(0.16 0.07 266 / 0.86);
+      padding: 4px 10px;
+      border-radius: 999px;
+      z-index: 3;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .status-banner.bust-text {
+      background: oklch(0.45 0.22 18 / 0.92);
+      color: #fff;
+    }
+
+    .die-wrap {
+      position: relative;
+      z-index: 2;
+      width: var(--die);
+      height: var(--die);
+      margin-bottom: 22px;
+      perspective: 750px;
+      transform: translate(var(--dx), var(--dy)) rotate(var(--rz));
+      filter: drop-shadow(0 12px 10px rgba(0, 0, 0, 0.55));
+      cursor: pointer;
+    }
+
+    .die-wrap.toss {
+      animation: toss 0.95s cubic-bezier(.22, .7, .3, 1) both;
+    }
+
+    @keyframes toss {
+      0% {
+        transform: translate(calc(var(--dx) * -1.4), -90px) rotate(var(--rz)) scale(1.36);
+        opacity: 0;
+      }
+      15% { opacity: 1; }
+      55% {
+        transform: translate(calc(var(--dx) * 0.5), calc(var(--dy) - 22px)) rotate(var(--rz)) scale(1.08);
+      }
+      72% {
+        transform: translate(var(--dx), var(--dy)) rotate(var(--rz)) scale(1);
+      }
+      86% {
+        transform: translate(var(--dx), calc(var(--dy) - 9px)) rotate(var(--rz)) scale(1.02);
+      }
+      100% {
+        transform: translate(var(--dx), var(--dy)) rotate(var(--rz)) scale(1);
+      }
+    }
+
+    .cube {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transform-style: preserve-3d;
+      transform: rotateX(-14deg) rotateY(-7deg) rotateX(var(--fx)) rotateY(var(--fy));
+    }
+
+    .cube.spin {
+      animation: spin 0.95s cubic-bezier(.2, .7, .25, 1) both;
+    }
+
+    @keyframes spin {
+      from {
+        transform: rotateX(calc(-14deg + var(--tx) * 360deg)) rotateY(calc(-7deg + var(--ty) * 360deg)) rotateX(var(--fx)) rotateY(var(--fy));
+      }
+    }
+
+    .cube[data-face="1"] { --fx: 0deg;   --fy: 0deg; }
+    .cube[data-face="2"] { --fx: -90deg; --fy: 0deg; }
+    .cube[data-face="3"] { --fx: 0deg;   --fy: -90deg; }
+    .cube[data-face="4"] { --fx: 0deg;   --fy: 90deg; }
+    .cube[data-face="5"] { --fx: 90deg;  --fy: 0deg; }
+    .cube[data-face="6"] { --fx: 0deg;   --fy: 180deg; }
+
+    .face {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(145deg, var(--paper), oklch(0.9 0.025 270));
+      border-radius: 16%;
+      box-shadow: inset 0 0 0 2px oklch(0.86 0.03 270), inset 0 -5px 8px oklch(0.2 0.1 268 / 0.14);
+      display: grid;
+      grid-template: repeat(3, 1fr) / repeat(3, 1fr);
+      padding: 15%;
+    }
+
+    .f1 { transform: translateZ(calc(var(--die) / 2)); }
+    .f6 { transform: rotateY(180deg) translateZ(calc(var(--die) / 2)); }
+    .f3 { transform: rotateY(90deg) translateZ(calc(var(--die) / 2)); }
+    .f4 { transform: rotateY(-90deg) translateZ(calc(var(--die) / 2)); }
+    .f2 { transform: rotateX(90deg) translateZ(calc(var(--die) / 2)); }
+    .f5 { transform: rotateX(-90deg) translateZ(calc(var(--die) / 2)); }
+
+    .p {
+      width: 74%;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background: var(--ink);
+      place-self: center;
+      opacity: 0;
+      box-shadow: inset 0 2px 3px rgba(0, 0, 0, 0.35);
+    }
+
+    .f1 .p5,
+    .f2 :is(.p1, .p9),
+    .f3 :is(.p1, .p5, .p9),
+    .f4 :is(.p1, .p3, .p7, .p9),
+    .f5 :is(.p1, .p3, .p5, .p7, .p9),
+    .f6 :is(.p1, .p3, .p4, .p6, .p7, .p9) {
+      opacity: 1;
+    }
+
+    .f1 .p5 {
+      background: var(--rose);
+      width: 100%;
+      box-shadow: 0 0 8px oklch(0.63 0.25 18 / 0.45), inset 0 2px 3px rgba(0, 0, 0, 0.3);
+    }
+
+    .center-tray.bust {
+      animation: shake 0.42s ease-in-out;
+      border-color: var(--rose);
+    }
+
+    @keyframes shake {
+      20% { transform: translateX(-8px); }
+      40% { transform: translateX(8px); }
+      60% { transform: translateX(-5px); }
+      80% { transform: translateX(5px); }
+    }
+
+    /* ==========================================================================
+       Victory Overlay — Tug-of-War Showdown & Confetti
+       ========================================================================== */
+    .victory-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 20;
+      background: oklch(0.18 0.11 266 / 0.94);
+      backdrop-filter: blur(8px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 24px 20px;
+      gap: 14px;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+
+    .trophy-badge {
+      width: 68px;
+      height: 68px;
+      border-radius: 22px;
+      background: var(--lemon);
+      color: var(--ink);
+      display: grid;
+      place-items: center;
+      box-shadow: 0 12px 30px oklch(0.93 0.17 100 / 0.35);
+    }
+
+    .trophy-badge.lose-badge {
+      background: oklch(0.32 0.12 266);
+      color: var(--rose);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+    }
+
+    .trophy-badge svg {
+      width: 36px;
+      height: 36px;
+    }
+
+    .victory-overlay h2 {
+      font: 400 clamp(1.9rem, 7.5vw, 2.6rem)/1.02 var(--f-display);
+      margin: 2px 0 0;
+      color: var(--paper);
+    }
+
+    .tug-arena {
+      width: 100%;
+      max-width: 360px;
+      background: oklch(0.24 0.1 266);
+      border: 1.5px solid var(--line);
+      border-radius: 22px;
+      padding: 14px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .tug-fighters {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .v-card {
+      background: oklch(0.28 0.11 266);
+      border: 1.5px solid var(--line);
+      border-radius: 16px;
+      padding: 10px 8px;
+      transition: transform 0.3s ease;
+    }
+
+    .v-card.winner {
+      border-color: var(--lemon);
+      background: oklch(0.36 0.18 265);
+      transform: scale(1.04);
+    }
+
+    .v-card span {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .v-card b {
+      display: block;
+      font-family: var(--f-body);
+      font-weight: 700;
+      font-size: 1.9rem;
+      margin-top: 2px;
+      color: var(--paper);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .v-card.winner b {
+      color: var(--lemon);
+    }
+
+    .vs-emblem {
+      font-family: var(--f-display);
+      font-size: 0.85rem;
+      color: var(--lemon);
+      background: oklch(0.2 0.08 266);
+      padding: 6px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+    }
+
+    .tug-rope-box {
+      display: grid;
+      gap: 5px;
+    }
+
+    .tug-rope-track {
+      position: relative;
+      height: 14px;
+      border-radius: 999px;
+      background: oklch(0.18 0.07 266);
+      border: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      padding: 0 6px;
+    }
+
+    .tug-rope-line {
+      width: 100%;
+      height: 5px;
+      border-radius: 999px;
+      background: repeating-linear-gradient(
+        45deg,
+        #eab308,
+        #eab308 6px,
+        #ca8a04 6px,
+        #ca8a04 12px
+      );
+    }
+
+    .tug-center-flag {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--rose);
+      border: 2.5px solid var(--paper);
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+      transform: translate(-50%, -50%);
+      transition: left 0.7s cubic-bezier(.22, .8, .3, 1);
+    }
+
+    .tug-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--muted);
+    }
+
+    .victory-btns {
+      display: grid;
+      gap: 10px;
+      width: 100%;
+      max-width: 280px;
+    }
+
+    .btn-secondary {
+      min-height: 46px;
+      border-radius: 999px;
+      border: 1.5px solid var(--paper);
+      background: transparent;
+      font-weight: 700;
+      font-size: 0.95rem;
+      cursor: pointer;
+    }
+
+    #confetti {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 25;
+      overflow: hidden;
+    }
+
+    .chip {
+      position: absolute;
+      top: -20px;
+      left: 50%;
+      width: 8px;
+      height: 14px;
+      background: var(--lemon);
+      animation: fall 2.4s ease-in both;
+    }
+
+    @keyframes fall {
+      from { opacity: 1; }
+      to   { transform: translate(var(--drift, 0px), 780px) rotate(var(--spin, 360deg)); opacity: 0.9; }
+    }
+
+    @supports (width: random(1px, 2px)) {
+      .speck {
+        left: random(0%, 100%);
+        top: random(0%, 100%);
+        width: random(1px, 3px);
+        opacity: random(0.08, 0.32);
+      }
+
+      .chip {
+        left: random(0%, 100%);
+        --drift: random(-140px, 140px);
+        --spin: random(-720deg, 720deg);
+        width: random(6px, 11px);
+        height: random(10px, 18px);
+        background: oklch(0.82 0.16 random(0, 360));
+        animation-duration: random(1.8s, 3.2s);
+        animation-delay: random(0s, 0.7s);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .die-wrap.toss, .cube.spin, .center-tray.bust, .tut-die.pop { animation: none; }
+      .chip { display: none; }
+      .pz-fill, .tut-p-fill, .tug-center-flag { transition: none; }
+    }
+  </style>
+</head>
+
+<body>
+  <style id="roll-rules"></style>
+
+  <!-- Declared MP3 Audio Assets (With Web Audio API Synthesis Fallback) -->
+  <div id="audioAssets" hidden aria-hidden="true">
+    <audio id="bgmPlayer" preload="auto"></audio>
+    <audio id="sfxCheers" src="cheers.mp3" preload="auto"></audio>
+    <audio id="sfxOops" src="oops.mp3" preload="auto"></audio>
+  </div>
+
+  <div class="phone-shell">
+    <!-- Top Utility Header (Always Accessible) -->
+    <header class="topbar">
+      <div class="top-actions">
+        <button class="icon-btn" id="flipBtn" type="button" title="Flip Player 2 panel for face-to-face tabletop play" hidden>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10l5-6 5 6H7zm10 4l-5 6-5-6h10z"/></svg>
+          <span>Flip P2</span>
+        </button>
+        <button class="icon-btn" id="changeModeBtn" type="button" hidden>Home</button>
+        <button class="icon-btn" id="settingsBtn" type="button" title="Audio & Music Settings" aria-haspopup="dialog" aria-controls="settingsModalBackdrop">
+          <span aria-hidden="true">⚙️</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- ======================================================================
+         SCREEN 1: Start / Mode Selection + Interactive 6-Step Tutorial
+         ====================================================================== -->
+    <section class="start-screen" id="startScreen" aria-label="Game Mode Selection">
+      <div class="start-top-stack">       
+
+        <div class="hero-block">
+          <div class="hero-die-icon" aria-hidden="true"><span></span></div>
+          <div class="hero-text">
+            <h1>Roll or Hold</h1>
+            <p>Stack your turn bank, avoid the <strong>Red 1</strong>, and be first to bank <strong>50</strong>!</p>
+          </div>
+        </div>
+
+        <!-- Interactive 6-Step Animated Tutorial -->
+        <div class="tutorial-card" id="tutorialCard" aria-label="How to Play Animated Tutorial">
+          <div class="tut-top">
+            <span class="tut-badge" id="tutStepLabel">How to Play • 1 / 6</span>
+            <div class="tut-controls">
+              <button class="tut-btn" id="tutPrevBtn" type="button" aria-label="Previous step">‹ Prev</button>
+              <button class="tut-btn" id="tutNextBtn" type="button" aria-label="Next step">Next ›</button>
+            </div>
+          </div>
+
+          <div class="tut-stage" id="tutStage">
+            <div class="tut-player active" id="tutP1">
+              <div class="tut-p-head">
+                <span>Player 1</span>
+                <span class="tut-p-tag" id="tutP1Tag">ACTIVE</span>
+              </div>
+              <div class="tut-p-score"><span id="tutP1Score">0</span> <small>/ 50</small></div>
+              <div class="tut-p-bar"><div class="tut-p-fill" id="tutP1Bar" style="width:0%"></div></div>
+              <div class="tut-mini-btns">
+                <span class="tut-mini-btn roll" id="tutP1RollBtn">Roll</span>
+                <span class="tut-mini-btn hold" id="tutP1HoldBtn">Hold</span>
+              </div>
+            </div>
+
+            <div class="tut-center">
+              <span class="tut-action-pill" id="tutActionPill">P1 TAPS ROLL</span>
+              <div class="tut-die" id="tutDie" data-val="4" aria-hidden="true">
+                <span class="tp tp1"></span><span class="tp tp2"></span><span class="tp tp3"></span>
+                <span class="tp tp4"></span><span class="tp tp5"></span><span class="tp tp6"></span>
+                <span class="tp tp7"></span><span class="tp tp8"></span><span class="tp tp9"></span>
+              </div>
+              <span class="tut-bank-chip" id="tutBankChip">Bank: +4</span>
+            </div>
+
+            <div class="tut-player dull" id="tutP2">
+              <div class="tut-p-head">
+                <span>Player 2</span>
+                <span class="tut-p-tag" id="tutP2Tag">WAIT</span>
+              </div>
+              <div class="tut-p-score"><span id="tutP2Score">0</span> <small>/ 50</small></div>
+              <div class="tut-p-bar"><div class="tut-p-fill" id="tutP2Bar" style="width:0%"></div></div>
+              <div class="tut-mini-btns">
+                <span class="tut-mini-btn roll" id="tutP2RollBtn">Roll</span>
+                <span class="tut-mini-btn hold" id="tutP2HoldBtn">Hold</span>
+              </div>
+            </div>
+          </div>
+
+          <p class="tut-caption" id="tutCaption">
+            <strong>1. Tap Roll:</strong> Both start at <strong>0</strong>. Player 1 taps <strong>Roll</strong> (rolls 4) to start building their unbanked <strong>Turn Bank (+4)</strong>.
+          </p>
+
+          <div class="tut-dots" id="tutDots" role="tablist" aria-label="Tutorial steps">
+            <button class="tut-dot active" type="button" data-step="0" aria-label="Step 1"></button>
+            <button class="tut-dot" type="button" data-step="1" aria-label="Step 2"></button>
+            <button class="tut-dot" type="button" data-step="2" aria-label="Step 3"></button>
+            <button class="tut-dot" type="button" data-step="3" aria-label="Step 4"></button>
+            <button class="tut-dot" type="button" data-step="4" aria-label="Step 5"></button>
+            <button class="tut-dot" type="button" data-step="5" aria-label="Step 6"></button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mode Selection Cards + Friend Name Setup -->
+      <div class="start-bottom-stack">
+        <div class="mode-cards">
+          <button class="mode-card" id="btnChooseFriend" type="button">
+            <div class="mode-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+            </div>
+            <div class="mode-info">
+              <b>Play with Friend</b>
+              <span>2-player pass &amp; play on one phone</span>
+            </div>
+          </button>
+
+          <button class="mode-card" id="btnChooseCpu" type="button">
+            <div class="mode-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 18c1.1 0 1.99-.9 1.99-2L22 6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2H0v2h24v-2h-4zM4 6h16v10H4V6z"/></svg>
+            </div>
+            <div class="mode-info">
+              <b>Play with Computer</b>
+              <span>Challenge the smart house AI</span>
+            </div>
+          </button>
+        </div>
+
+        <form class="friend-setup" id="friendForm" hidden>
+          <div class="input-row">
+            <div class="field">
+              <label for="p1Input">Player 1 (Bottom)</label>
+              <input id="p1Input" type="text" maxlength="16" placeholder="Player 1" autocomplete="off">
+            </div>
+            <div class="field">
+              <label for="p2Input">Player 2 (Top)</label>
+              <input id="p2Input" type="text" maxlength="16" placeholder="Player 2" autocomplete="off">
+            </div>
+          </div>
+          <button class="start-match-btn" type="submit">Start 2-Player Match</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- Fixed Centered Settings Modal -->
+    <div class="settings-backdrop" id="settingsModalBackdrop" hidden role="dialog" aria-modal="true" aria-labelledby="settingsModalTitle">
+      <div class="settings-modal">
+        <div class="settings-modal-head">
+          <h3 id="settingsModalTitle">Audio &amp; Music</h3>
+          <button class="modal-close-btn" id="closeSettingsBtn" type="button" aria-label="Close settings">✕</button>
+        </div>
+        <div class="set-row">
+          <label for="bgmTrackSelect">Music Track</label>
+          <select class="set-select" id="bgmTrackSelect">
+            <option value="0">1. Hitrun Minecraft</option>
+            <option value="1">2. Minecraft Calm</option>
+            <option value="2">3. Retro Arcade</option>
+            <option value="3">4. Subclair Instrumental</option>
+          </select>
+        </div>
+        <div class="set-row">
+          <span>Background Music</span>
+          <button class="switch-btn on" id="bgmToggleBtn" type="button">ON</button>
+        </div>
+        <div class="set-row">
+          <span>Sound Effects</span>
+          <button class="switch-btn on" id="sfxToggleBtn" type="button">ON</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================================================================
+         SCREEN 2: Vertically Divided 2-Player Arena
+         ====================================================================== -->
+    <main class="arena" id="arenaScreen" hidden>
+      <!-- TOP ZONE: Player 2 / Computer -->
+      <section class="player-zone top-zone dull" id="zoneP2" aria-label="Player 2 Area">
+        <div class="pz-header">
+          <div class="pz-identity">
+            <span class="turn-indicator" aria-hidden="true"></span>
+            <span class="pz-name" id="nameP2">Player 2</span>
+          </div>
+          <span class="pz-badge" id="badgeP2">Waiting</span>
+        </div>
+
+        <div class="pz-metrics">
+          <div class="pz-stat-box">
+            <span class="pz-stat-label">Saved Score</span>
+            <div class="pz-total">
+              <span class="pz-score" id="scoreP2">0</span>
+              <span class="pz-goal">/ 50</span>
+            </div>
+          </div>
+          <div class="pz-stat-box bank-box">
+            <span class="pz-stat-label">Current Turn</span>
+            <b class="pz-bank-val" id="bankP2">+0</b>
+          </div>
+        </div>
+
+        <div class="pz-track" aria-hidden="true">
+          <div class="pz-fill" id="barP2"></div>
+        </div>
+
+        <div class="pz-actions">
+          <button class="act-btn roll" id="rollP2" type="button" disabled>Roll</button>
+          <button class="act-btn hold" id="holdP2" type="button" disabled>Hold</button>
+        </div>
+      </section>
+
+      <!-- CENTER SHARED 3D DICE TRAY (~50% Reduced Height) -->
+      <section class="center-tray" id="tray" aria-label="3D Dice Tray">
+        <div class="specks" id="specks" aria-hidden="true"></div>
+        <div class="die-wrap" id="dieWrap" role="button" tabindex="0" aria-label="Tap die to roll">
+          <div class="cube" id="die" data-face="5" role="img" aria-label="Die showing 5"></div>
+        </div>
+        <div class="status-banner" id="status" aria-live="polite">Player 1's turn — Roll to start!</div>
+      </section>
+
+      <!-- BOTTOM ZONE: Player 1 -->
+      <section class="player-zone bottom-zone active" id="zoneP1" aria-label="Player 1 Area">
+        <div class="pz-header">
+          <div class="pz-identity">
+            <span class="turn-indicator" aria-hidden="true"></span>
+            <span class="pz-name" id="nameP1">Player 1</span>
+          </div>
+          <span class="pz-badge" id="badgeP1">Active Turn</span>
+        </div>
+
+        <div class="pz-metrics">
+          <div class="pz-stat-box">
+            <span class="pz-stat-label">Saved Score</span>
+            <div class="pz-total">
+              <span class="pz-score" id="scoreP1">0</span>
+              <span class="pz-goal">/ 50</span>
+            </div>
+          </div>
+          <div class="pz-stat-box bank-box">
+            <span class="pz-stat-label">Current Turn</span>
+            <b class="pz-bank-val" id="bankP1">+0</b>
+          </div>
+        </div>
+
+        <div class="pz-track" aria-hidden="true">
+          <div class="pz-fill" id="barP1"></div>
+        </div>
+
+        <div class="pz-actions">
+          <button class="act-btn roll" id="rollP1" type="button">Roll</button>
+          <button class="act-btn hold" id="holdP1" type="button" disabled>Hold</button>
+        </div>
+      </section>
+    </main>
+
+    <!-- ======================================================================
+         Victory Overlay — Tug-of-War Showdown & Confetti
+         ====================================================================== -->
+    <div id="confetti" aria-hidden="true"></div>
+    <section class="victory-overlay" id="victoryOverlay" hidden aria-live="assertive">
+      <div class="trophy-badge" id="trophyBadge" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94.63 1.5 1.98 2.63 3.61 2.96V19H7v2h10v-2h-4v-3.1c1.63-.33 2.98-1.46 3.61-2.96C19.08 12.63 21 10.55 21 8V7c0-1.1-.9-2-2-2zM5 8V7h2v3.82C5.84 10.4 5 9.3 5 8zm14 0c0 1.3-.84 2.4-2 2.82V7h2v1z"/></svg>
+      </div>
+      <h2 id="winnerTitle">Player 1 Wins!</h2>
+
+      <div class="tug-arena">
+        <div class="tug-fighters">
+          <div class="v-card" id="vCardP1">
+            <span id="vNameP1">Player 1</span>
+            <b id="vScoreP1">50</b>
+          </div>
+          <div class="vs-emblem">VS</div>
+          <div class="v-card" id="vCardP2">
+            <span id="vNameP2">Player 2</span>
+            <b id="vScoreP2">34</b>
+          </div>
+        </div>
+
+        <div class="tug-rope-box">
+          <div class="tug-rope-track">
+            <div class="tug-rope-line"></div>
+            <div class="tug-center-flag" id="tugFlag" style="left: 50%;"></div>
+          </div>
+          <div class="tug-labels">
+            <span id="tugLabelLeft">Player 1</span>
+            <span id="tugMarginLabel">Lead: +16 pts</span>
+            <span id="tugLabelRight">Player 2</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="victory-btns">
+        <button class="start-match-btn" id="playAgainBtn" type="button">Play Again</button>
+        <button class="btn-secondary" id="victoryModeBtn" type="button">Change Mode</button>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      var TARGET = 50;
+      var HAS_RANDOM = !!(window.CSS && CSS.supports && CSS.supports('width', 'random(1px, 2px)'));
+      var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      var $ = function (id) { return document.getElementById(id); };
+      var wait = function (ms) { return new Promise(function (r) { setTimeout(r, ms); }); };
+      var rnd = function (a, b) { return a + Math.random() * (b - a); };
+
+      /* ----------------------------------------------------------------------
+         Audio & Music Engine (MP3 + Web Audio API Synthesis Fallback)
+         ---------------------------------------------------------------------- */
+      var SoundFX = (function () {
+        var TRACKS = [
+          { name: 'Hitrun Minecraft', src: 'hitrun-minecraft.mp3', notes: [261.63, 329.63, 392.00, 523.25, 392.00, 329.63] },
+          { name: 'Minecraft Calm',   src: 'minecraft.mp3',        notes: [220.00, 261.63, 329.63, 392.00, 329.63, 261.63] },
+          { name: 'Retro Arcade',     src: 'retro-arcade.mp3',     notes: [329.63, 392.00, 493.88, 587.33, 493.88, 392.00] },
+          { name: 'Subclair Synth',   src: 'subclair-instrumental.mp3', notes: [196.00, 246.94, 293.66, 369.99, 293.66, 246.94] }
+        ];
+
+        var trackIndex = 0;
+        var bgmOn = true;
+        var sfxOn = true;
+        var ctx = null;
+        var synthTimer = null;
+        var step = 0;
+        var usingFallbackBgm = false;
+
+        var bgmEl = $('bgmPlayer');
+        var cheersEl = $('sfxCheers');
+        var oopsEl = $('sfxOops');
+
+        function getCtx() {
+          if (!ctx) {
+            var AC = window.AudioContext || window.webkitAudioContext;
+            if (AC) ctx = new AC();
+          }
+          if (ctx && ctx.state === 'suspended') {
+            ctx.resume().catch(function () {});
+          }
+          return ctx;
+        }
+
+        function tone(freq, dur, type, vol, delay) {
+          if (!sfxOn) return;
+          var c = getCtx();
+          if (!c) return;
+          var t0 = c.currentTime + (delay || 0);
+          var osc = c.createOscillator();
+          var gain = c.createGain();
+          osc.type = type || 'sine';
+          osc.frequency.setValueAtTime(freq, t0);
+          gain.gain.setValueAtTime(vol || 0.08, t0);
+          gain.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+          osc.connect(gain);
+          gain.connect(c.destination);
+          osc.start(t0);
+          osc.stop(t0 + dur + 0.02);
+        }
+
+        function startSynthLoop() {
+          stopSynthLoop();
+          if (!bgmOn) return;
+          synthTimer = setInterval(function () {
+            if (!bgmOn) return;
+            var c = getCtx();
+            if (!c || c.state !== 'running') return;
+            var notes = TRACKS[trackIndex].notes;
+            var freq = notes[step % notes.length];
+            step++;
+            var osc = c.createOscillator();
+            var gain = c.createGain();
+            osc.type = trackIndex === 2 ? 'square' : 'triangle';
+            osc.frequency.setValueAtTime(freq, c.currentTime);
+            gain.gain.setValueAtTime(0.028, c.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.0001, c.currentTime + 0.42);
+            osc.connect(gain);
+            gain.connect(c.destination);
+            osc.start();
+            osc.stop(c.currentTime + 0.45);
+          }, 480);
+        }
+
+        function stopSynthLoop() {
+          if (synthTimer) {
+            clearInterval(synthTimer);
+            synthTimer = null;
+          }
+        }
+
+        function playBgm() {
+          if (!bgmOn) {
+            if (bgmEl) bgmEl.pause();
+            stopSynthLoop();
+            return;
+          }
+          getCtx();
+          if (!bgmEl) {
+            usingFallbackBgm = true;
+            startSynthLoop();
+            return;
+          }
+          var targetSrc = TRACKS[trackIndex].src;
+          if (!bgmEl.getAttribute('src') || bgmEl.getAttribute('src') !== targetSrc) {
+            bgmEl.src = targetSrc;
+          }
+          bgmEl.loop = true;
+          bgmEl.volume = 0.35;
+          var p = bgmEl.play();
+          if (p && typeof p.catch === 'function') {
+            p.then(function () {
+              usingFallbackBgm = false;
+              stopSynthLoop();
+            }).catch(function () {
+              usingFallbackBgm = true;
+              startSynthLoop();
+            });
+          }
+        }
+
+        if (bgmEl) {
+          bgmEl.addEventListener('error', function () {
+            usingFallbackBgm = true;
+            if (bgmOn) startSynthLoop();
+          });
+        }
+
+        return {
+          unlockAndPlayBgm: function () {
+            getCtx();
+            if (bgmOn && (usingFallbackBgm || !bgmEl || bgmEl.paused)) {
+              playBgm();
+            }
+          },
+          setTrack: function (idx) {
+            trackIndex = Math.max(0, Math.min(TRACKS.length - 1, idx));
+            step = 0;
+            if (bgmOn) playBgm();
+          },
+          toggleBgm: function () {
+            bgmOn = !bgmOn;
+            playBgm();
+            return bgmOn;
+          },
+          toggleSfx: function () {
+            sfxOn = !sfxOn;
+            return sfxOn;
+          },
+          roll: function () {
+            for (var i = 0; i < 4; i++) {
+              tone(240 + i * 55, 0.06, 'triangle', 0.06, i * 0.065);
+            }
+          },
+          land: function () {
+            tone(520, 0.11, 'sine', 0.09, 0);
+            tone(680, 0.14, 'triangle', 0.07, 0.06);
+          },
+          bank: function () {
+            tone(523.25, 0.12, 'triangle', 0.1, 0);
+            tone(659.25, 0.14, 'triangle', 0.1, 0.08);
+            tone(783.99, 0.22, 'triangle', 0.11, 0.16);
+          },
+          bust: function () {
+            tone(220, 0.18, 'sawtooth', 0.09, 0);
+            tone(155, 0.28, 'sawtooth', 0.09, 0.12);
+          },
+          winHuman: function () {
+            if (!sfxOn) return;
+            if (cheersEl) {
+              cheersEl.currentTime = 0;
+              cheersEl.play().catch(function () {});
+            }
+            [523.25, 659.25, 783.99, 1046.5].forEach(function (f, i) {
+              tone(f, 0.28, 'triangle', 0.11, i * 0.09);
+            });
+          },
+          winComputer: function () {
+            if (!sfxOn) return;
+            if (oopsEl) {
+              oopsEl.currentTime = 0;
+              oopsEl.play().catch(function () {});
+            }
+            [392.0, 349.23, 311.13, 261.63].forEach(function (f, i) {
+              tone(f, 0.24, 'sawtooth', 0.07, i * 0.14);
+            });
+          }
+        };
+      })();
+
+      /* ----------------------------------------------------------------------
+         Interactive 6-Step Manual Tutorial Controller (Starts at 0-0)
+         ---------------------------------------------------------------------- */
+      var Tutorial = (function () {
+        var steps = [
+          {
+            label: 'How to Play • 1 / 6',
+            active: 'p1',
+            p1Score: 0, p2Score: 0,
+            die: 4, bank: 'Bank: +4', action: 'P1 TAPS ROLL',
+            triggerBtn: 'tutP1RollBtn',
+            stateClass: '',
+            caption: '<strong>1. Tap Roll:</strong> Both start at <strong>0</strong>. Player 1 taps <strong>Roll</strong> (rolls 4) to start building their unbanked <strong>Turn Bank (+4)</strong>.'
+          },
+          {
+            label: 'How to Play • 2 / 6',
+            active: 'p1',
+            p1Score: 0, p2Score: 0,
+            die: 6, bank: 'Bank: +10', action: 'P1 ROLLS AGAIN',
+            triggerBtn: 'tutP1RollBtn',
+            stateClass: '',
+            caption: '<strong>2. Roll Unlimited:</strong> Player 1 taps <strong>Roll</strong> again (rolls 6), stacking the <strong>Turn Bank to +10</strong>. Keep rolling as long as you dare!'
+          },
+          {
+            label: 'How to Play • 3 / 6',
+            active: 'p1',
+            p1Score: 10, p2Score: 0,
+            die: 6, bank: 'Banked +10!', action: 'P1 TAPS HOLD',
+            triggerBtn: 'tutP1HoldBtn',
+            stateClass: '',
+            caption: '<strong>3. Tap Hold to Save:</strong> Satisfied with +10, Player 1 taps <strong>Hold</strong>. The <strong>+10</strong> locks safely into Player 1’s Total Score (<strong>10 / 50</strong>)!'
+          },
+          {
+            label: 'How to Play • 4 / 6',
+            active: 'p2',
+            p1Score: 10, p2Score: 0,
+            die: 5, bank: 'Bank: +5', action: 'TURN PASSES TO P2',
+            triggerBtn: 'tutP2RollBtn',
+            stateClass: '',
+            caption: '<strong>4. Turn Transfers to Player 2:</strong> Holding ends Player 1’s turn. <strong>Player 2</strong> activates and taps <strong>Roll</strong> (rolls 5).'
+          },
+          {
+            label: 'How to Play • 5 / 6',
+            active: 'p1',
+            p1Score: 10, p2Score: 0,
+            die: 1, bank: 'BUST! 0', action: 'P2 ROLLED RED 1',
+            triggerBtn: 'tutP2RollBtn',
+            stateClass: 'is-bust',
+            caption: '<strong>5. Red 1 Wipes Turn Bank:</strong> Player 2 rolls again and hits a <span class="danger">Red 1</span>! Their unbanked +5 is lost (<strong>0</strong>) and the turn returns to Player 1.'
+          },
+          {
+            label: 'How to Play • 6 / 6',
+            active: 'p1',
+            p1Score: 50, p2Score: 34,
+            die: 6, bank: 'WINNER!', action: 'FIRST TO 50',
+            triggerBtn: 'tutP1HoldBtn',
+            stateClass: 'is-win',
+            caption: '<strong>6. First to 50 Wins:</strong> Keep rolling and holding to build your safe total. The first player to hold <strong>50 points</strong> wins the Tug-of-War!'
+          }
+        ];
+
+        var idx = 0;
+
+        function pulseTrigger(btnId) {
+          ['tutP1RollBtn', 'tutP1HoldBtn', 'tutP2RollBtn', 'tutP2HoldBtn'].forEach(function (id) {
+            $(id).classList.remove('trigger');
+          });
+          var target = $(btnId);
+          if (target) {
+            void target.offsetWidth;
+            target.classList.add('trigger');
+          }
+        }
+
+        function render(stepIndex) {
+          idx = (stepIndex + steps.length) % steps.length;
+          var s = steps[idx];
+
+          $('tutStepLabel').textContent = s.label;
+          $('tutCaption').innerHTML = s.caption;
+          $('tutActionPill').textContent = s.action;
+
+          $('tutP1Score').textContent = s.p1Score;
+          $('tutP2Score').textContent = s.p2Score;
+          $('tutP1Bar').style.width = Math.min(100, (s.p1Score / 50) * 100) + '%';
+          $('tutP2Bar').style.width = Math.min(100, (s.p2Score / 50) * 100) + '%';
+
+          var p1Active = s.active === 'p1';
+          $('tutP1').classList.toggle('active', p1Active);
+          $('tutP1').classList.toggle('dull', !p1Active);
+          $('tutP1Tag').textContent = p1Active ? 'ACTIVE' : 'WAIT';
+
+          $('tutP2').classList.toggle('active', !p1Active);
+          $('tutP2').classList.toggle('dull', p1Active);
+          $('tutP2Tag').textContent = !p1Active ? 'ACTIVE' : 'WAIT';
+
+          pulseTrigger(s.triggerBtn);
+
+          var dieEl = $('tutDie');
+          dieEl.dataset.val = s.die;
+          dieEl.classList.remove('pop');
+          void dieEl.offsetWidth;
+          dieEl.classList.add('pop');
+
+          var bankEl = $('tutBankChip');
+          bankEl.textContent = s.bank;
+          bankEl.classList.toggle('bust', s.stateClass === 'is-bust');
+
+          var stageEl = $('tutStage');
+          stageEl.classList.remove('is-bust', 'is-win');
+          if (s.stateClass) stageEl.classList.add(s.stateClass);
+
+          var dots = $('tutDots').querySelectorAll('.tut-dot');
+          dots.forEach(function (d, i) {
+            d.classList.toggle('active', i === idx);
+          });
+        }
+
+        $('tutPrevBtn').addEventListener('click', function () {
+          render(idx - 1);
+        });
+
+        $('tutNextBtn').addEventListener('click', function () {
+          render(idx + 1);
+        });
+
+        $('tutDots').addEventListener('click', function (e) {
+          var btn = e.target.closest('.tut-dot');
+          if (!btn) return;
+          render(Number(btn.dataset.step));
+        });
+
+        render(0);
+
+        return {
+          render: render,
+          reset: function () { render(0); }
+        };
+      })();
+
+      /* ----------------------------------------------------------------------
+         Game State & DOM References
+         ---------------------------------------------------------------------- */
+      var wrap = $('dieWrap'), die = $('die'), tray = $('tray'), rules = $('roll-rules');
+      var seq = 0;
+
+      var state = {
+        mode: 'friend',
+        names: { p1: 'Player 1', p2: 'Player 2' },
+        scores: { p1: 0, p2: 0 },
+        bank: 0,
+        turn: 'p1',
+        busy: false,
+        over: false,
+        flipped: false
+      };
+
+      function buildDieFaces() {
+        for (var f = 1; f <= 6; f++) {
+          var face = document.createElement('div');
+          face.className = 'face f' + f;
+          for (var pi = 1; pi <= 9; pi++) {
+            var pip = document.createElement('span');
+            pip.className = 'p p' + pi;
+            face.appendChild(pip);
+          }
+          die.appendChild(face);
+        }
+      }
+
+      function makeSpecks() {
+        var box = $('specks');
+        for (var i = 0; i < 45; i++) {
+          var s = document.createElement('i');
+          s.className = 'speck';
+          if (!HAS_RANDOM) {
+            s.style.left = rnd(0, 100) + '%';
+            s.style.top = rnd(0, 100) + '%';
+            s.style.width = rnd(1, 3) + 'px';
+            s.style.opacity = rnd(0.08, 0.3);
+          }
+          box.appendChild(s);
+        }
+      }
+
+      /* ----------------------------------------------------------------------
+         UI Synchronization (Dulls ONLY buttons on inactive turn)
+         ---------------------------------------------------------------------- */
+      function setStatus(msg, isBust) {
+        var el = $('status');
+        el.textContent = msg;
+        el.classList.toggle('bust-text', !!isBust);
+      }
+
+      function updateUI() {
+        var isP1 = state.turn === 'p1';
+        var isP2 = state.turn === 'p2';
+
+        $('nameP1').textContent = state.names.p1;
+        $('nameP2').textContent = state.names.p2;
+
+        $('scoreP1').textContent = state.scores.p1;
+        $('scoreP2').textContent = state.scores.p2;
+        $('barP1').style.width = Math.min(100, (state.scores.p1 / TARGET) * 100) + '%';
+        $('barP2').style.width = Math.min(100, (state.scores.p2 / TARGET) * 100) + '%';
+
+        $('bankP1').textContent = '+' + (isP1 ? state.bank : 0);
+        $('bankP2').textContent = '+' + (isP2 ? state.bank : 0);
+
+        var z1 = $('zoneP1'), z2 = $('zoneP2');
+        z1.classList.toggle('active', isP1 && !state.over);
+        z1.classList.toggle('dull', !isP1 || state.over);
+
+        z2.classList.toggle('active', isP2 && !state.over);
+        z2.classList.toggle('dull', !isP2 || state.over);
+
+        $('badgeP1').textContent = state.over ? 'Finished' : (isP1 ? 'Active Turn' : 'Waiting');
+        if (state.over) {
+          $('badgeP2').textContent = 'Finished';
+        } else if (state.mode === 'cpu') {
+          $('badgeP2').textContent = isP2 ? 'AI Thinking…' : 'Computer';
+        } else {
+          $('badgeP2').textContent = isP2 ? 'Active Turn' : 'Waiting';
+        }
+
+        var p1CanAct = isP1 && !state.busy && !state.over;
+        $('rollP1').disabled = !p1CanAct;
+        $('holdP1').disabled = !p1CanAct || state.bank === 0;
+        $('holdP1').textContent = state.bank > 0 && isP1 ? 'Hold +' + state.bank : 'Hold';
+
+        var p2CanAct = isP2 && state.mode === 'friend' && !state.busy && !state.over;
+        $('rollP2').disabled = !p2CanAct;
+        $('holdP2').disabled = !p2CanAct || state.bank === 0;
+        $('holdP2').textContent = state.bank > 0 && isP2 ? 'Hold +' + state.bank : 'Hold';
+      }
+
+      /* ----------------------------------------------------------------------
+         3D Dice Roll Physics
+         ---------------------------------------------------------------------- */
+      function rollDiePhysics() {
+        seq++;
+        var k = '--r' + seq;
+        var n = NaN;
+        var vars = ['--roll', '--dx', '--dy', '--rz', '--tx', '--ty'];
+        var reach = Math.max(20, Math.min(76, (tray.clientWidth - wrap.offsetWidth) / 2 - 16));
+        reach = Math.round(reach);
+
+        if (HAS_RANDOM) {
+          vars.forEach(function (p) { wrap.style.removeProperty(p); });
+          rules.textContent =
+            '.die-wrap{--roll:random(' + k + 'a,1,6,1);' +
+            '--dx:random(' + k + 'b,-' + reach + 'px,' + reach + 'px);' +
+            '--dy:random(' + k + 'c,-10px,10px);' +
+            '--rz:random(' + k + 'd,-32deg,32deg);' +
+            '--tx:random(' + k + 'e,2,4,1);' +
+            '--ty:random(' + k + 'f,-4,-2,1)}';
+          n = Math.round(parseFloat(getComputedStyle(wrap).getPropertyValue('--roll')));
+        }
+
+        if (!(n >= 1 && n <= 6)) {
+          rules.textContent = '';
+          n = 1 + Math.floor(Math.random() * 6);
+          wrap.style.setProperty('--roll', n);
+          wrap.style.setProperty('--dx', Math.round(rnd(-reach, reach)) + 'px');
+          wrap.style.setProperty('--dy', Math.round(rnd(-10, 10)) + 'px');
+          wrap.style.setProperty('--rz', Math.round(rnd(-32, 32)) + 'deg');
+          wrap.style.setProperty('--tx', 2 + Math.floor(Math.random() * 3));
+          wrap.style.setProperty('--ty', -2 - Math.floor(Math.random() * 3));
+        }
+
+        n = Math.max(1, Math.min(6, n));
+
+        wrap.classList.remove('toss');
+        die.classList.remove('spin');
+        void wrap.offsetWidth;
+        wrap.classList.add('toss');
+        die.classList.add('spin');
+
+        return n;
+      }
+
+      async function performRoll() {
+        state.busy = true;
+        updateUI();
+        SoundFX.roll();
+
+        var n = rollDiePhysics();
+        die.dataset.face = n;
+        die.setAttribute('aria-label', 'Die showing ' + n);
+
+        await wait(reduced ? 180 : 950);
+        return n;
+      }
+
+      /* ----------------------------------------------------------------------
+         Turn & Game Rules Logic
+         ---------------------------------------------------------------------- */
+      async function handleBust(who) {
+        SoundFX.bust();
+        state.bank = 0;
+        var nextName = who === 'p1' ? state.names.p2 : state.names.p1;
+        setStatus(state.names[who] + ' rolled a RED 1! Bank lost — ' + nextName + "'s turn.", true);
+
+        tray.classList.remove('bust');
+        void tray.offsetWidth;
+        tray.classList.add('bust');
+        updateUI();
+
+        await wait(reduced ? 350 : 1050);
+        tray.classList.remove('bust');
+        switchTurn();
+      }
+
+      function switchTurn() {
+        state.turn = state.turn === 'p1' ? 'p2' : 'p1';
+        state.bank = 0;
+        state.busy = false;
+        updateUI();
+
+        if (state.turn === 'p2' && state.mode === 'cpu') {
+          runComputerTurn();
+        } else {
+          setStatus(state.names[state.turn] + "'s turn — Roll or Hold!");
+        }
+      }
+
+      function handleHold(who) {
+        if (state.bank <= 0) return;
+        SoundFX.bank();
+        var gained = state.bank;
+        state.scores[who] += gained;
+        state.bank = 0;
+        updateUI();
+
+        if (state.scores[who] >= TARGET) {
+          finishMatch(who);
+          return;
+        }
+
+        var nextName = who === 'p1' ? state.names.p2 : state.names.p1;
+        setStatus(state.names[who] + ' banked +' + gained + '! ' + nextName + "'s turn.");
+        switchTurn();
+      }
+
+      async function handleHumanRoll(who) {
+        if (state.busy || state.over || state.turn !== who) return;
+        var n = await performRoll();
+
+        if (n === 1) {
+          await handleBust(who);
+          return;
+        }
+
+        SoundFX.land();
+        state.bank += n;
+        state.busy = false;
+        setStatus(state.names[who] + ' rolled ' + n + ' (Current Turn: +' + state.bank + ')');
+        updateUI();
+      }
+
+      async function runComputerTurn() {
+        setStatus('Computer is rolling…');
+        await wait(reduced ? 250 : 750);
+
+        while (!state.over && state.turn === 'p2') {
+          var n = await performRoll();
+          if (n === 1) {
+            await handleBust('p2');
+            return;
+          }
+
+          SoundFX.land();
+          state.bank += n;
+          updateUI();
+
+          var holdThreshold = state.scores.p2 > state.scores.p1 + 10 ? 12 : 15;
+          if (state.scores.p2 + state.bank >= TARGET || state.bank >= holdThreshold) {
+            setStatus('Computer rolled ' + n + ' and holds +' + state.bank + '.');
+            await wait(reduced ? 250 : 700);
+            handleHold('p2');
+            return;
+          }
+
+          setStatus('Computer rolled ' + n + ' (Turn: +' + state.bank + ') — rolling again…');
+          await wait(reduced ? 200 : 650);
+        }
+      }
+
+      function finishMatch(winnerKey) {
+        state.over = true;
+        state.busy = false;
+        updateUI();
+
+        var cpuWon = (state.mode === 'cpu' && winnerKey === 'p2');
+        $('trophyBadge').classList.toggle('lose-badge', cpuWon);
+
+        if (cpuWon) {
+          SoundFX.winComputer();
+        } else {
+          SoundFX.winHuman();
+          spawnConfetti();
+        }
+
+        $('winnerTitle').textContent = cpuWon ? 'Computer Wins!' : (state.names[winnerKey] + ' Wins!');
+        $('vNameP1').textContent = state.names.p1;
+        $('vScoreP1').textContent = state.scores.p1;
+        $('vNameP2').textContent = state.names.p2;
+        $('vScoreP2').textContent = state.scores.p2;
+
+        $('vCardP1').classList.toggle('winner', winnerKey === 'p1');
+        $('vCardP2').classList.toggle('winner', winnerKey === 'p2');
+
+        var p1Score = state.scores.p1;
+        var p2Score = state.scores.p2;
+        var diff = p2Score - p1Score;
+        var pullPercent = Math.max(12, Math.min(88, 50 + (diff / TARGET) * 38));
+        $('tugFlag').style.left = pullPercent + '%';
+        $('tugLabelLeft').textContent = state.names.p1;
+        $('tugLabelRight').textContent = state.names.p2;
+        $('tugMarginLabel').textContent = 'Lead: +' + Math.abs(diff) + ' pts';
+
+        $('victoryOverlay').hidden = false;
+      }
+
+      function spawnConfetti() {
+        var box = $('confetti');
+        box.textContent = '';
+        for (var i = 0; i < 65; i++) {
+          var c = document.createElement('b');
+          c.className = 'chip';
+          if (!HAS_RANDOM) {
+            c.style.left = rnd(0, 100) + '%';
+            c.style.setProperty('--drift', rnd(-130, 130) + 'px');
+            c.style.setProperty('--spin', rnd(-720, 720) + 'deg');
+            c.style.background = 'oklch(0.84 0.16 ' + Math.round(rnd(0, 360)) + ')';
+            c.style.animationDuration = rnd(1.8, 3.1) + 's';
+            c.style.animationDelay = rnd(0, 0.6) + 's';
+          }
+          box.appendChild(c);
+        }
+        setTimeout(function () { box.textContent = ''; }, 4200);
+      }
+
+      /* ----------------------------------------------------------------------
+         Navigation & Match Lifecycle
+         ---------------------------------------------------------------------- */
+      function startMatch(mode, p1Name, p2Name) {
+        SoundFX.unlockAndPlayBgm();
+
+        state.mode = mode;
+        state.names.p1 = (p1Name || '').trim() || 'Player 1';
+        state.names.p2 = mode === 'cpu' ? 'Computer' : ((p2Name || '').trim() || 'Player 2');
+        state.scores = { p1: 0, p2: 0 };
+        state.bank = 0;
+        state.turn = 'p1';
+        state.busy = false;
+        state.over = false;
+
+        if (mode === 'cpu') {
+          state.flipped = false;
+          $('zoneP2').classList.remove('flipped');
+        }
+
+        $('startScreen').hidden = true;
+        $('victoryOverlay').hidden = true;
+        $('arenaScreen').hidden = false;
+        $('changeModeBtn').hidden = false;
+        $('flipBtn').hidden = (mode !== 'friend');
+
+        die.dataset.face = 5;
+        die.classList.remove('spin');
+        wrap.classList.remove('toss');
+        setStatus(state.names.p1 + "'s turn — Roll to start!");
+        updateUI();
+      }
+
+      function showModeScreen() {
+        state.over = true;
+        state.busy = false;
+        $('arenaScreen').hidden = true;
+        $('victoryOverlay').hidden = true;
+        $('changeModeBtn').hidden = true;
+        $('flipBtn').hidden = true;
+        $('startScreen').hidden = false;
+        Tutorial.reset();
+      }
+
+      /* ----------------------------------------------------------------------
+         Event Listeners
+         ---------------------------------------------------------------------- */
+      $('btnChooseFriend').addEventListener('click', function () {
+        SoundFX.unlockAndPlayBgm();
+        $('btnChooseFriend').classList.add('selected');
+        $('btnChooseCpu').classList.remove('selected');
+        $('friendForm').hidden = false;
+        $('p1Input').focus();
+      });
+
+      $('friendForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        startMatch('friend', $('p1Input').value, $('p2Input').value);
+      });
+
+      $('btnChooseCpu').addEventListener('click', function () {
+        $('btnChooseCpu').classList.add('selected');
+        $('btnChooseFriend').classList.remove('selected');
+        $('friendForm').hidden = true;
+        startMatch('cpu', 'You', 'Computer');
+      });
+
+      $('rollP1').addEventListener('click', function () { handleHumanRoll('p1'); });
+      $('holdP1').addEventListener('click', function () { handleHold('p1'); });
+      $('rollP2').addEventListener('click', function () { handleHumanRoll('p2'); });
+      $('holdP2').addEventListener('click', function () { handleHold('p2'); });
+      $('dieWrap').addEventListener('click', function () {
+        if (state.turn === 'p1' || state.mode === 'friend') {
+          handleHumanRoll(state.turn);
+        }
+      });
+
+      // Settings Modal Controls
+      $('settingsBtn').addEventListener('click', function () {
+        SoundFX.unlockAndPlayBgm();
+        $('settingsModalBackdrop').hidden = false;
+        $('closeSettingsBtn').focus();
+      });
+
+      $('closeSettingsBtn').addEventListener('click', function () {
+        $('settingsModalBackdrop').hidden = true;
+        $('settingsBtn').focus();
+      });
+
+      $('settingsModalBackdrop').addEventListener('click', function (e) {
+        if (e.target === this) {
+          this.hidden = true;
+          $('settingsBtn').focus();
+        }
+      });
+
+      $('bgmTrackSelect').addEventListener('change', function () {
+        SoundFX.setTrack(Number(this.value));
+      });
+
+      $('bgmToggleBtn').addEventListener('click', function () {
+        var on = SoundFX.toggleBgm();
+        this.textContent = on ? 'ON' : 'OFF';
+        this.classList.toggle('on', on);
+      });
+
+      $('sfxToggleBtn').addEventListener('click', function () {
+        var on = SoundFX.toggleSfx();
+        this.textContent = on ? 'ON' : 'OFF';
+        this.classList.toggle('on', on);
+      });
+
+      $('changeModeBtn').addEventListener('click', showModeScreen);
+      $('flipBtn').addEventListener('click', function () {
+        state.flipped = !state.flipped;
+        $('zoneP2').classList.toggle('flipped', state.flipped);
+      });
+
+      $('playAgainBtn').addEventListener('click', function () {
+        startMatch(state.mode, state.names.p1, state.names.p2);
+      });
+      $('victoryModeBtn').addEventListener('click', showModeScreen);
+
+      document.addEventListener('keydown', function (e) {
+        if ($('arenaScreen').hidden || e.ctrlKey || e.metaKey || e.altKey) return;
+        var k = e.key.toLowerCase();
+        var activeBtn = state.turn === 'p1'
+          ? (k === 'r' ? $('rollP1') : k === 'h' ? $('holdP1') : null)
+          : (k === 'r' ? $('rollP2') : k === 'h' ? $('holdP2') : null);
+        if (activeBtn && !activeBtn.disabled) {
+          e.preventDefault();
+          activeBtn.click();
+        }
+      });
+
+      window.addEventListener('load', function () {
+        SoundFX.unlockAndPlayBgm();
+      });
+      ['pointerdown', 'keydown'].forEach(function (evt) {
+        document.addEventListener(evt, function firstGesture() {
+          SoundFX.unlockAndPlayBgm();
+          document.removeEventListener(evt, firstGesture);
+        }, { once: true });
+      });
+
+      buildDieFaces();
+      makeSpecks();
+    })();
+  </script>
+</body>
+
+</html>
