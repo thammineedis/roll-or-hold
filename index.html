@@ -213,7 +213,8 @@
       justify-content: center;
       flex-direction: column;
       gap: 12px;
-      padding: 1rem 0;
+      padding: .5rem 0;
+      margin-top: -.75rem;
     }
 
     .hero-die-icon {
@@ -241,14 +242,14 @@
     }
 
     .hero-block h1 {
-      font: 400 clamp(2rem, 6vw, 2.5rem)/1 var(--f-display);
+      font: 400 clamp(1.75rem, 6vw, 2rem)/1 var(--f-display);
       margin: 0 0 .75rem;
     }
 
     .hero-block p {
       margin: 0;
-      font-size: 1.2rem;
-      line-height: 1.5;
+      font-size: 1.1rem;
+      line-height: 1.2;
       color: var(--muted);
     }
 
@@ -797,8 +798,8 @@
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      gap: 10px;
-      padding: 10px 12px calc(12px + env(safe-area-inset-bottom, 0px));
+      gap: 6px;
+      padding: 6px 12px calc(6px + env(safe-area-inset-bottom, 0px));
       min-height: 0;
     }
 
@@ -1028,8 +1029,8 @@
        Compact Central 3D Dice Tray (~50% Reduced Height)
        ========================================================================== */
     .center-tray {
-      flex: 0 0 clamp(240px, 30dvh, 260px);
-      min-height: 240px;
+      flex: 0 0 clamp(20dvh, 22dvh, 25dvh);
+      min-height: 20dvh;
       position: relative;
       background:
         radial-gradient(circle at center, oklch(0.28 0.12 266 / 0.6), transparent 72%),
