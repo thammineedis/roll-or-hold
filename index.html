@@ -197,45 +197,84 @@
       flex: none;
     }
 
-    /* ==========================================================================
-       Incoming Challenge Notification Banner
-       ========================================================================== */
-    .invite-toast {
-      position: absolute;
-      top: calc(52px + env(safe-area-inset-top, 0px));
-      left: 14px;
-      right: 14px;
-      z-index: 70;
-      background: oklch(0.22 0.11 266 / 0.97);
-      border: 2px solid var(--lemon);
-      border-radius: 20px;
-      padding: 13px 14px;
-      display: grid;
-      gap: 10px;
-      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.75);
-      animation: sheetPullDown 0.25s cubic-bezier(.22, .85, .32, 1);
-    }
-
-    @keyframes sheetPullDown {
-      from { transform: translateY(-24px); opacity: 0; }
-      to   { transform: translateY(0); opacity: 1; }
-    }
-
-    .invite-toast-top {
-      display: flex;
+    .profile-pill {
+      display: inline-flex;
       align-items: center;
-      gap: 10px;
+      gap: 6px;
+      min-height: 32px;
+      padding: 0 10px 0 6px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: oklch(0.3 0.11 266);
+      font-size: 0.75rem;
+      font-weight: 700;
+      cursor: pointer;
+      max-width: 135px;
     }
 
-    .invite-avatar {
-      width: 38px;
-      height: 38px;
-      border-radius: 12px;
+    .profile-pill-avatar {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
       background: var(--lemon);
       color: var(--ink);
-      font-size: 1.15rem;
       display: grid;
       place-items: center;
+      font-size: 0.85rem;
+      flex: none;
+    }
+
+    .profile-pill-name {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .avatar-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 8px;
+    }
+
+    .avatar-choice {
+      aspect-ratio: 1;
+      border-radius: 14px;
+      border: 2px solid var(--line);
+      background: oklch(0.18 0.08 266);
+      font-size: 1.35rem;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      transition: transform 0.12s ease, border-color 0.15s ease, background 0.15s ease;
+    }
+
+    .avatar-choice.selected {
+      border-color: var(--lemon);
+      background: oklch(0.36 0.18 265);
+      transform: scale(1.06);
+    }
+
+    .lobby-avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 11px;
+      background: oklch(0.32 0.14 265);
+      border: 1px solid var(--line);
+      display: grid;
+      place-items: center;
+      font-size: 1.1rem;
+      flex: none;
+    }
+
+    .pz-avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 9px;
+      background: oklch(0.32 0.14 265);
+      border: 1px solid var(--line);
+      display: grid;
+      place-items: center;
+      font-size: 0.95rem;
       flex: none;
     }
 
@@ -1748,6 +1787,10 @@
         <button class="room-pill" id="roomBadgeBtn" type="button" title="Tap to copy Room Code" hidden>ROOM: -----</button>
       </div>
       <div class="top-actions">
+        <button class="profile-pill" id="profilePillBtn" type="button" title="Edit your Name & Avatar">
+          <span class="profile-pill-avatar" id="topAvatar">🎲</span>
+          <span class="profile-pill-name" id="topProfileName">Player</span>
+        </button>
         <button class="icon-btn" id="flipBtn" type="button" title="Flip Player 2 panel for face-to-face tabletop play" hidden>
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10l5-6 5 6H7zm10 4l-5 6-5-6h10z"/></svg>
           <span>Flip P2</span>
@@ -1762,7 +1805,7 @@
     <!-- Real-Time Incoming Challenge Notification Banner -->
     <div class="invite-toast" id="inviteToast" hidden role="alertdialog" aria-live="assertive" aria-labelledby="inviteSenderTitle">
       <div class="invite-toast-top">
-        <div class="invite-avatar" aria-hidden="true">🎲</div>
+        <div class="invite-avatar" id="inviteSenderAvatar" aria-hidden="true">🎲</div>
         <div class="invite-text">
           <b id="inviteSenderTitle">Someone is trying to play with you online!</b>
           <span id="inviteSenderSub">Tap Accept &amp; Play Game to start immediately</span>
@@ -1896,7 +1939,7 @@
         </div>
 
         <div class="field">
-          <label for="onlineNameInput">Your Display Name (Shown to Opponent)</label>
+          <label for="onlineNameInput">Your Profile Name (Edit in Top Bar Anytime)</label>
           <input id="onlineNameInput" type="text" maxlength="16" placeholder="Enter your name" autocomplete="off">
         </div>
 
@@ -1936,6 +1979,39 @@
 
         <p class="online-error" id="onlineError" hidden></p>
       </div>
+    </div>
+
+    <!-- Bottom Pull-Out Sheet: First-Time & Editable Player Profile (Name + Avatar) -->
+    <div class="sheet-backdrop" id="profileSheetBackdrop" hidden role="dialog" aria-modal="true" aria-labelledby="profileSheetTitle">
+      <form class="bottom-sheet" id="profileForm">
+        <div class="sheet-handle" id="profileSheetHandle" title="Swipe or tap to close"></div>
+        <div class="sheet-header">
+          <h3 id="profileSheetTitle">Your Player Profile</h3>
+          <button class="modal-close-btn" id="closeProfileSheetBtn" type="button" aria-label="Close profile panel">✕</button>
+        </div>
+        <div class="field">
+          <label for="profileNameInput">Your Name (Shown to Opponents Online)</label>
+          <input id="profileNameInput" type="text" maxlength="16" placeholder="Enter your name" required autocomplete="off">
+        </div>
+        <div class="field">
+          <label>Choose Your Avatar</label>
+          <div class="avatar-grid" id="avatarGrid" role="radiogroup" aria-label="Choose avatar">
+            <button type="button" class="avatar-choice selected" data-avatar="🎲">🎲</button>
+            <button type="button" class="avatar-choice" data-avatar="🦊">🦊</button>
+            <button type="button" class="avatar-choice" data-avatar="🐼">🐼</button>
+            <button type="button" class="avatar-choice" data-avatar="🦁">🦁</button>
+            <button type="button" class="avatar-choice" data-avatar="🐯">🐯</button>
+            <button type="button" class="avatar-choice" data-avatar="🐸">🐸</button>
+            <button type="button" class="avatar-choice" data-avatar="🦄">🦄</button>
+            <button type="button" class="avatar-choice" data-avatar="🐲">🐲</button>
+            <button type="button" class="avatar-choice" data-avatar="🚀">🚀</button>
+            <button type="button" class="avatar-choice" data-avatar="👑">👑</button>
+            <button type="button" class="avatar-choice" data-avatar="⚡">⚡</button>
+            <button type="button" class="avatar-choice" data-avatar="🔥">🔥</button>
+          </div>
+        </div>
+        <button class="start-match-btn" type="submit">Save Profile &amp; Continue</button>
+      </form>
     </div>
 
     <!-- Bottom Pull-Out Sheet: Local 2-Player Names Setup -->
@@ -1996,6 +2072,7 @@
         <div class="pz-header">
           <div class="pz-identity">
             <span class="turn-indicator" aria-hidden="true"></span>
+            <span class="pz-avatar" id="avatarP2" aria-hidden="true">🤖</span>
             <span class="pz-name" id="nameP2">Player 2</span>
           </div>
           <span class="pz-badge" id="badgeP2">Waiting</span>
@@ -2039,6 +2116,7 @@
         <div class="pz-header">
           <div class="pz-identity">
             <span class="turn-indicator" aria-hidden="true"></span>
+            <span class="pz-avatar" id="avatarP1" aria-hidden="true">🎲</span>
             <span class="pz-name" id="nameP1">Player 1</span>
           </div>
           <span class="pz-badge" id="badgeP1">Active Turn</span>
@@ -2485,6 +2563,7 @@
       var state = {
         mode: 'friend', // 'friend' | 'cpu' | 'online'
         names: { p1: 'Player 1', p2: 'Player 2' },
+        avatars: { p1: '🎲', p2: '👤' },
         scores: { p1: 0, p2: 0 },
         bank: 0,
         turn: 'p1',
@@ -2538,6 +2617,8 @@
         var isP1 = state.turn === 'p1';
         var isP2 = state.turn === 'p2';
 
+        $('avatarP1').textContent = state.avatars.p1 || '🎲';
+        $('avatarP2').textContent = state.avatars.p2 || (state.mode === 'cpu' ? '🤖' : '👤');
         $('nameP1').textContent = state.names.p1 + (state.mode === 'online' && state.mySeat === 'p1' ? ' (You)' : '');
         $('nameP2').textContent = state.names.p2 + (state.mode === 'online' && state.mySeat === 'p2' ? ' (You)' : '');
 
@@ -2674,10 +2755,12 @@
       }
 
       /* ----------------------------------------------------------------------
-         Online Presence & Real-Time Direct Challenge System (GitHub URL Ready)
+         Online Presence, Profile Storage & Real-Time Challenge System
          ---------------------------------------------------------------------- */
       var myUid = null;
       var myDisplayName = 'Player-' + Math.floor(100 + Math.random() * 900);
+      var myAvatar = '🎲';
+      var profileConfigured = false;
       var onlineUsers = [];
       var incomingInvite = null;
       var outgoingInviteId = null;
@@ -2685,6 +2768,65 @@
       var heartbeatTimer = null;
 
       $('onlineNameInput').value = myDisplayName;
+
+      function syncProfileUI() {
+        $('topAvatar').textContent = myAvatar;
+        $('topProfileName').textContent = myDisplayName;
+        $('onlineNameInput').value = myDisplayName;
+        $('profileNameInput').value = profileConfigured ? myDisplayName : '';
+        $('avatarGrid').querySelectorAll('.avatar-choice').forEach(function (btn) {
+          btn.classList.toggle('selected', btn.dataset.avatar === myAvatar);
+        });
+      }
+
+      function userProfileDocRef(uid) {
+        return doc(db, 'artifacts', appId, 'users', uid, 'profile', 'main');
+      }
+
+      async function loadOrPromptUserProfile(uid) {
+        if (!db || !uid) return;
+        try {
+          var snap = await getDoc(userProfileDocRef(uid));
+          if (snap.exists() && snap.data().name) {
+            var pData = snap.data();
+            myDisplayName = pData.name;
+            myAvatar = pData.avatar || '🎲';
+            profileConfigured = true;
+            syncProfileUI();
+            await publishMyPresence('available');
+          } else {
+            syncProfileUI();
+            $('profileSheetBackdrop').hidden = false;
+            setTimeout(function () { $('profileNameInput').focus(); }, 120);
+          }
+        } catch (err) {
+          console.error('Profile load error:', err);
+          $('profileSheetBackdrop').hidden = false;
+        }
+      }
+
+      async function saveUserProfile(name, avatar) {
+        var cleanName = (name || '').trim() || myDisplayName;
+        var cleanAvatar = avatar || myAvatar || '🎲';
+        myDisplayName = cleanName;
+        myAvatar = cleanAvatar;
+        profileConfigured = true;
+        syncProfileUI();
+        $('profileSheetBackdrop').hidden = true;
+
+        if (db && myUid) {
+          try {
+            await setDoc(userProfileDocRef(myUid), {
+              name: myDisplayName,
+              avatar: myAvatar,
+              updatedAt: serverTimestamp()
+            }, { merge: true });
+          } catch (err) {
+            console.error('Profile save error:', err);
+          }
+          await publishMyPresence();
+        }
+      }
 
       function presenceCollectionRef() {
         return collection(db, 'artifacts', appId, 'public', 'data', 'roll_hold_presence');
@@ -2711,22 +2853,26 @@
           await setDoc(presenceDocRef(myUid), {
             uid: myUid,
             name: myDisplayName,
+            avatar: myAvatar,
             status: currentStatus,
             lastSeen: Date.now(),
             updatedAt: serverTimestamp()
           }, { merge: true });
         } catch (err) {
           console.error('Presence update failed:', err);
+          setOnlineError('Firebase sync blocked: Add this domain in Firebase Auth → Authorized Domains & enable Firestore rules.');
         }
       }
 
       function renderOnlineUsersList() {
         var now = Date.now();
+        // Allow 2-minute window to prevent phone clock skew from hiding active devices
         var activeAll = onlineUsers.filter(function (u) {
-          return u && u.lastSeen && (now - u.lastSeen) < 45000;
+          return u && u.lastSeen && Math.abs(now - u.lastSeen) < 120000;
         });
 
-        var totalOnline = Math.max(1, activeAll.length);
+        var hasMe = activeAll.some(function (u) { return u.uid === myUid; });
+        var totalOnline = activeAll.length + (hasMe ? 0 : 1);
         var othersAvailable = activeAll.filter(function (u) {
           return u.uid !== myUid;
         });
@@ -2738,12 +2884,13 @@
           : 'Share your URL — ' + totalOnline + ' user online now';
 
         var listEl = $('onlineUsersList');
+        if (!listEl) return;
         listEl.textContent = '';
 
         if (othersAvailable.length === 0) {
           var empty = document.createElement('p');
           empty.className = 'lobby-empty';
-          empty.textContent = 'No other players online yet. Share your GitHub URL with a friend — as soon as they open it, their name will appear right here!';
+          empty.textContent = 'No other players detected yet. Open this exact URL on another phone (ensure GitHub Pages domain is added in Firebase Auth → Authorized Domains) and they will appear here!';
           listEl.appendChild(empty);
           return;
         }
@@ -2754,6 +2901,11 @@
 
           var left = document.createElement('div');
           left.className = 'lobby-user';
+
+          var av = document.createElement('span');
+          av.className = 'lobby-avatar';
+          av.textContent = player.avatar || '🎲';
+          left.appendChild(av);
 
           var dot = document.createElement('span');
           dot.className = 'online-live-dot';
@@ -2796,8 +2948,10 @@
             status: 'waiting',
             p1Uid: myUid,
             p1Name: hostName,
+            p1Avatar: myAvatar,
             p2Uid: targetPlayer.uid,
             p2Name: targetPlayer.name || 'Player 2',
+            p2Avatar: targetPlayer.avatar || '🎲',
             p1Score: 0,
             p2Score: 0,
             bank: 0,
@@ -2815,6 +2969,7 @@
             id: invId,
             fromUid: myUid,
             fromName: hostName,
+            fromAvatar: myAvatar,
             toUid: targetPlayer.uid,
             toName: targetPlayer.name || 'Player 2',
             roomCode: code,
@@ -2849,17 +3004,21 @@
       }
 
       function initRealtimePresenceAndInvites() {
-        if (!db || !authReadyPromise) return;
+        if (!db || !authReadyPromise) {
+          setOnlineError('Firebase connection unavailable.');
+          return;
+        }
         authReadyPromise.then(async function (user) {
           if (!user) return;
           myUid = user.uid;
+          await loadOrPromptUserProfile(myUid);
           await publishMyPresence('available');
 
           if (heartbeatTimer) clearInterval(heartbeatTimer);
           heartbeatTimer = setInterval(function () {
             publishMyPresence();
             renderOnlineUsersList();
-          }, 15000);
+          }, 12000);
 
           onSnapshot(presenceCollectionRef(), function (snapshot) {
             var list = [];
@@ -2870,13 +3029,14 @@
             renderOnlineUsersList();
           }, function (err) {
             console.error('Presence listener error:', err);
+            setOnlineError('Cannot read online players: Check Firestore Rules for /artifacts/roll-or-hold/public/data.');
           });
 
           onSnapshot(invitesCollectionRef(), function (snapshot) {
             var latestPending = null;
             snapshot.forEach(function (docSnap) {
               var inv = docSnap.data();
-              if (inv && inv.toUid === myUid && inv.status === 'pending' && (Date.now() - (inv.createdAt || 0)) < 60000) {
+              if (inv && inv.toUid === myUid && inv.status === 'pending' && Math.abs(Date.now() - (inv.createdAt || 0)) < 120000) {
                 if (!latestPending || (inv.createdAt || 0) > (latestPending.createdAt || 0)) {
                   latestPending = inv;
                 }
@@ -2885,6 +3045,7 @@
 
             incomingInvite = latestPending;
             if (latestPending) {
+              $('inviteSenderAvatar').textContent = latestPending.fromAvatar || '🎲';
               $('inviteSenderTitle').textContent = (latestPending.fromName || 'A friend') + ' is trying to play with you online!';
               $('inviteSenderSub').textContent = 'Tap Accept & Play Game to join ' + (latestPending.fromName || 'them') + ' now';
               $('inviteToast').hidden = false;
@@ -2896,6 +3057,7 @@
           });
         }).catch(function (err) {
           console.error('Auth presence failed:', err);
+          setOnlineError('Firebase Auth blocked on this URL (' + window.location.hostname + '). Add this domain in Firebase Console → Authentication → Settings → Authorized domains.');
         });
       }
 
@@ -2925,6 +3087,7 @@
           var updatedRoom = {
             p2Uid: myUid,
             p2Name: myName,
+            p2Avatar: myAvatar,
             status: 'playing',
             statusText: (roomData.p1Name || inv.fromName || 'Player 1') + "'s turn — Roll to start!",
             updatedAt: serverTimestamp()
@@ -2978,8 +3141,10 @@
             status: 'waiting',
             p1Uid: user.uid,
             p1Name: hostName,
+            p1Avatar: myAvatar,
             p2Uid: null,
             p2Name: 'Waiting…',
+            p2Avatar: '🎲',
             p1Score: 0,
             p2Score: 0,
             bank: 0,
@@ -3041,6 +3206,7 @@
           await updateDoc(roomDocRef(code), {
             p2Uid: user.uid,
             p2Name: guestName,
+            p2Avatar: myAvatar,
             status: 'playing',
             statusText: (data.p1Name || 'Player 1') + "'s turn — Roll to start!",
             updatedAt: serverTimestamp()
@@ -3049,6 +3215,7 @@
           await publishMyPresence('in_game');
           launchOnlineArena(code, 'p2', Object.assign({}, data, {
             p2Name: guestName,
+            p2Avatar: myAvatar,
             status: 'playing'
           }));
           subscribeToRoom(code);
@@ -3067,6 +3234,8 @@
         state.mySeat = seat;
         state.names.p1 = roomData.p1Name || 'Player 1';
         state.names.p2 = roomData.p2Name || 'Player 2';
+        state.avatars.p1 = roomData.p1Avatar || '🎲';
+        state.avatars.p2 = roomData.p2Avatar || '🎲';
         state.scores.p1 = roomData.p1Score || 0;
         state.scores.p2 = roomData.p2Score || 0;
         state.bank = roomData.bank || 0;
@@ -3142,6 +3311,8 @@
 
           state.names.p1 = data.p1Name || state.names.p1;
           state.names.p2 = data.p2Name || state.names.p2;
+          state.avatars.p1 = data.p1Avatar || state.avatars.p1;
+          state.avatars.p2 = data.p2Avatar || state.avatars.p2;
           state.scores.p1 = data.p1Score || 0;
           state.scores.p2 = data.p2Score || 0;
           state.bank = data.bank || 0;
@@ -3399,8 +3570,10 @@
         state.mode = mode;
         state.roomCode = null;
         state.mySeat = null;
-        state.names.p1 = (p1Name || '').trim() || 'Player 1';
+        state.names.p1 = (p1Name || '').trim() || myDisplayName || 'Player 1';
         state.names.p2 = mode === 'cpu' ? 'Computer' : ((p2Name || '').trim() || 'Player 2');
+        state.avatars.p1 = myAvatar || '🎲';
+        state.avatars.p2 = mode === 'cpu' ? '🤖' : '👤';
         state.scores = { p1: 0, p2: 0 };
         state.bank = 0;
         state.turn = 'p1';
@@ -3480,6 +3653,28 @@
 
       wireBottomSheetDismiss('onlineSheetBackdrop', 'onlinePanel', 'closeOnlineSheetBtn', 'onlineSheetHandle');
       wireBottomSheetDismiss('friendSheetBackdrop', 'friendForm', 'closeFriendSheetBtn', 'friendSheetHandle');
+      wireBottomSheetDismiss('profileSheetBackdrop', 'profileForm', 'closeProfileSheetBtn', 'profileSheetHandle');
+
+      // Profile Modal Controls (Name + Avatar)
+      $('profilePillBtn').addEventListener('click', function () {
+        syncProfileUI();
+        $('profileSheetBackdrop').hidden = false;
+        $('profileNameInput').focus();
+      });
+
+      $('avatarGrid').addEventListener('click', function (e) {
+        var btn = e.target.closest('.avatar-choice');
+        if (!btn) return;
+        myAvatar = btn.dataset.avatar || '🎲';
+        $('avatarGrid').querySelectorAll('.avatar-choice').forEach(function (b) {
+          b.classList.toggle('selected', b === btn);
+        });
+      });
+
+      $('profileForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        saveUserProfile($('profileNameInput').value, myAvatar);
+      });
 
       // Online Mode Controls
       $('onlineCountBtn').addEventListener('click', function () {
@@ -3571,7 +3766,7 @@
         $('btnChooseOnline').classList.remove('selected');
         $('friendSheetBackdrop').hidden = true;
         $('onlineSheetBackdrop').hidden = true;
-        startMatch('cpu', 'You', 'Computer');
+        startMatch('cpu', myDisplayName || 'You', 'Computer');
       });
 
       $('rollP1').addEventListener('click', function () { handleHumanRoll('p1'); });
