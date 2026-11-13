@@ -3244,6 +3244,7 @@
         state.over = false;
         state.lastRemoteRollSeq = roomData.rollSeq || 0;
         state.lastRemoteActionSeq = roomData.actionSeq || 0;
+        state.roomActionSeq = roomData.actionSeq || 0;
         state.flipped = false;
 
         $('zoneP2').classList.remove('flipped');
@@ -3276,12 +3277,20 @@
 
           if ($('arenaScreen').hidden) return;
 
-          // Ignore our own optimistic local echo snapshots so we never overwrite or double-trigger
-          if (data.lastRoller === state.mySeat && (data.actionSeq || 0) <= (state.lastRemoteActionSeq || 0)) {
+          var incomingActSeq = data.actionSeq || 0;
+          var incomingRollSeq = data.rollSeq || 0;
+
+          // Keep global room sequence monotonically synced across both devices
+          if (incomingActSeq > (state.roomActionSeq || 0)) {
+            state.roomActionSeq = incomingActSeq;
+          }
+
+          // Ignore duplicate/stale snapshots already processed locally
+          if (incomingActSeq > 0 && incomingActSeq <= (state.lastRemoteActionSeq || 0) && incomingRollSeq <= (state.lastRemoteRollSeq || 0)) {
             return;
           }
-          if ((data.actionSeq || 0) > (state.lastRemoteActionSeq || 0)) {
-            state.lastRemoteActionSeq = data.actionSeq;
+          if (incomingActSeq > (state.lastRemoteActionSeq || 0)) {
+            state.lastRemoteActionSeq = incomingActSeq;
           }
 
           // Handle Rematch Reset
@@ -3291,8 +3300,9 @@
             state.scores = { p1: 0, p2: 0 };
             state.bank = 0;
             state.turn = 'p1';
-            state.lastRemoteRollSeq = data.rollSeq || 0;
-            state.lastRemoteActionSeq = data.actionSeq || 0;
+            state.lastRemoteRollSeq = incomingRollSeq;
+            state.lastRemoteActionSeq = incomingActSeq;
+            state.roomActionSeq = incomingActSeq;
             $('victoryOverlay').hidden = true;
             die.dataset.face = 5;
             setStatus(data.statusText || (state.names.p1 + "'s turn — Roll to start!"));
@@ -3300,9 +3310,9 @@
             return;
           }
 
-          // Animate remote dice roll if triggered by the other device
-          if ((data.rollSeq || 0) > state.lastRemoteRollSeq) {
-            state.lastRemoteRollSeq = data.rollSeq;
+          // Animate remote dice roll if triggered by the opponent device
+          if (incomingRollSeq > (state.lastRemoteRollSeq || 0)) {
+            state.lastRemoteRollSeq = incomingRollSeq;
             if (data.lastRoller !== state.mySeat) {
               await performRoll(data.lastRoll);
               if (data.lastRoll === 1) {
@@ -3319,6 +3329,7 @@
             SoundFX.bank();
           }
 
+          // Always apply authoritative room scores, bank, and turn
           state.names.p1 = data.p1Name || state.names.p1;
           state.names.p2 = data.p2Name || state.names.p2;
           state.avatars.p1 = data.p1Avatar || state.avatars.p1;
@@ -3356,31 +3367,19 @@
         tray.classList.remove('bust');
         void tray.offsetWidth;
         tray.classList.add('bust');
-        updateUI();
 
-        if (state.mode === 'online' && state.roomCode) {
+        // Online mode already committed the atomic bust_roll state in handleHumanRoll
+        if (state.mode === 'online') {
           state.turn = nextTurn;
           state.busy = false;
-          var nextActSeq = (state.lastRemoteActionSeq || 0) + 1;
-          state.lastRemoteActionSeq = nextActSeq;
           updateUI();
-          try {
-            await updateDoc(roomDocRef(state.roomCode), {
-              bank: 0,
-              turn: nextTurn,
-              lastRoller: who,
-              actionSeq: nextActSeq,
-              lastAction: 'bust',
-              statusText: msg,
-              updatedAt: serverTimestamp()
-            });
-          } catch (e) { console.error(e); }
           await wait(reduced ? 350 : 900);
           tray.classList.remove('bust');
           updateUI();
           return;
         }
 
+        updateUI();
         await wait(reduced ? 350 : 1050);
         tray.classList.remove('bust');
         switchTurn();
@@ -3417,7 +3416,8 @@
         if (state.mode === 'online' && state.roomCode) {
           if (!won) state.turn = nextTurn;
           state.busy = false;
-          var nextActSeq = (state.lastRemoteActionSeq || 0) + 1;
+          var nextActSeq = Math.max(state.roomActionSeq || 0, state.lastRemoteActionSeq || 0) + 1;
+          state.roomActionSeq = nextActSeq;
           state.lastRemoteActionSeq = nextActSeq;
           setStatus(msg);
           updateUI();
@@ -3461,8 +3461,9 @@
 
         if (state.mode === 'online' && state.roomCode) {
           var nextSeq = (state.lastRemoteRollSeq || 0) + 1;
-          var nextActSeq = (state.lastRemoteActionSeq || 0) + 1;
+          var nextActSeq = Math.max(state.roomActionSeq || 0, state.lastRemoteActionSeq || 0) + 1;
           state.lastRemoteRollSeq = nextSeq;
+          state.roomActionSeq = nextActSeq;
           state.lastRemoteActionSeq = nextActSeq;
           var nextTurnOnRoll = n === 1 ? (who === 'p1' ? 'p2' : 'p1') : who;
           var nextBank = n === 1 ? 0 : state.bank + n;
@@ -3847,6 +3848,8 @@
 
       $('playAgainBtn').addEventListener('click', async function () {
         if (state.mode === 'online' && state.roomCode && db) {
+          var nextActSeq = Math.max(state.roomActionSeq || 0, state.lastRemoteActionSeq || 0) + 1;
+          state.roomActionSeq = nextActSeq;
           try {
             await updateDoc(roomDocRef(state.roomCode), {
               p1Score: 0,
@@ -3854,6 +3857,7 @@
               bank: 0,
               turn: 'p1',
               lastRoll: 5,
+              actionSeq: nextActSeq,
               lastAction: 'rematch',
               winner: null,
               status: 'playing',
