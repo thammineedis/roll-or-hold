@@ -1312,6 +1312,10 @@
       gap: 10px;
     }
 
+    .pz-actions[hidden] {
+      display: none !important;
+    }
+
     .act-btn {
       min-height: 52px;
       padding: 10px 16px;
@@ -2096,7 +2100,7 @@
           <div class="pz-fill" id="barP2"></div>
         </div>
 
-        <div class="pz-actions">
+        <div class="pz-actions" id="actionsP2">
           <button class="act-btn roll" id="rollP2" type="button" disabled>Roll</button>
           <button class="act-btn hold" id="holdP2" type="button" disabled>Hold</button>
         </div>
@@ -2140,7 +2144,7 @@
           <div class="pz-fill" id="barP1"></div>
         </div>
 
-        <div class="pz-actions">
+        <div class="pz-actions" id="actionsP1">
           <button class="act-btn roll" id="rollP1" type="button">Roll</button>
           <button class="act-btn hold" id="holdP1" type="button" disabled>Hold</button>
         </div>
@@ -2641,8 +2645,8 @@
           $('badgeP1').textContent = 'Finished';
           $('badgeP2').textContent = 'Finished';
         } else if (state.mode === 'online') {
-          $('badgeP1').textContent = isP1 ? (state.mySeat === 'p1' ? 'Your Turn' : 'Rolling…') : 'Waiting';
-          $('badgeP2').textContent = isP2 ? (state.mySeat === 'p2' ? 'Your Turn' : 'Rolling…') : 'Waiting';
+          $('badgeP1').textContent = isP1 ? (state.mySeat === 'p1' ? 'Your Turn' : (state.busy ? 'Rolling…' : 'Opponent Turn')) : 'Waiting';
+          $('badgeP2').textContent = isP2 ? (state.mySeat === 'p2' ? 'Your Turn' : (state.busy ? 'Rolling…' : 'Opponent Turn')) : 'Waiting';
         } else if (state.mode === 'cpu') {
           $('badgeP1').textContent = isP1 ? 'Active Turn' : 'Waiting';
           $('badgeP2').textContent = isP2 ? 'AI Thinking…' : 'Computer';
@@ -2651,13 +2655,18 @@
           $('badgeP2').textContent = isP2 ? 'Active Turn' : 'Waiting';
         }
 
-        var p1CanAct = isP1 && !state.busy && !state.over && (state.mode !== 'online' || state.mySeat === 'p1');
+        // Hide opponent's Roll & Hold buttons block completely in Online mode
+        var isOnline = state.mode === 'online';
+        $('actionsP1').hidden = isOnline && state.mySeat !== 'p1';
+        $('actionsP2').hidden = isOnline && state.mySeat !== 'p2';
+
+        var p1CanAct = isP1 && !state.busy && !state.over && (!isOnline || state.mySeat === 'p1');
         $('rollP1').disabled = !p1CanAct;
         $('holdP1').disabled = !p1CanAct || state.bank === 0;
         $('holdP1').textContent = state.bank > 0 && isP1 ? 'Hold +' + state.bank : 'Hold';
 
         var p2CanAct = isP2 && !state.busy && !state.over &&
-          (state.mode === 'friend' || (state.mode === 'online' && state.mySeat === 'p2'));
+          (state.mode === 'friend' || (isOnline && state.mySeat === 'p2'));
         $('rollP2').disabled = !p2CanAct;
         $('holdP2').disabled = !p2CanAct || state.bank === 0;
         $('holdP2').textContent = state.bank > 0 && isP2 ? 'Hold +' + state.bank : 'Hold';
@@ -3285,11 +3294,11 @@
             state.roomActionSeq = incomingActSeq;
           }
 
-          // Ignore duplicate/stale snapshots already processed locally
-          if (incomingActSeq > 0 && incomingActSeq <= (state.lastRemoteActionSeq || 0) && incomingRollSeq <= (state.lastRemoteRollSeq || 0)) {
-            return;
-          }
-          if (incomingActSeq > (state.lastRemoteActionSeq || 0)) {
+          // Always synchronize authoritative turn/scores even if sequences match
+          var prevRollSeq = state.lastRemoteRollSeq || 0;
+          var prevActSeq = state.lastRemoteActionSeq || 0;
+
+          if (incomingActSeq > prevActSeq) {
             state.lastRemoteActionSeq = incomingActSeq;
           }
 
@@ -3311,10 +3320,14 @@
           }
 
           // Animate remote dice roll if triggered by the opponent device
-          if (incomingRollSeq > (state.lastRemoteRollSeq || 0)) {
+          if (incomingRollSeq > prevRollSeq) {
             state.lastRemoteRollSeq = incomingRollSeq;
-            if (data.lastRoller !== state.mySeat) {
-              await performRoll(data.lastRoll);
+            if (data.lastRoller && data.lastRoller !== state.mySeat) {
+              try {
+                await performRoll(data.lastRoll);
+              } finally {
+                state.busy = false;
+              }
               if (data.lastRoll === 1) {
                 SoundFX.bust();
                 tray.classList.remove('bust');
@@ -3325,11 +3338,11 @@
                 SoundFX.land();
               }
             }
-          } else if (data.lastAction === 'hold' && data.lastRoller !== state.mySeat) {
+          } else if (incomingActSeq > prevActSeq && data.lastAction === 'hold' && data.lastRoller !== state.mySeat) {
             SoundFX.bank();
           }
 
-          // Always apply authoritative room scores, bank, and turn
+          // Always apply authoritative room scores, bank, and turn so turn never locks
           state.names.p1 = data.p1Name || state.names.p1;
           state.names.p2 = data.p2Name || state.names.p2;
           state.avatars.p1 = data.p1Avatar || state.avatars.p1;
@@ -3349,6 +3362,8 @@
             finishMatch(data.winner);
           }
         }, function (err) {
+          state.busy = false;
+          updateUI();
           console.error('Online room sync error:', err);
         });
       }
@@ -3457,21 +3472,33 @@
         if (state.busy || state.over || state.turn !== who) return;
         if (state.mode === 'online' && state.mySeat !== who) return;
 
-        var n = await performRoll();
+        var n = 1;
+        try {
+          n = await performRoll();
 
-        if (state.mode === 'online' && state.roomCode) {
-          var nextSeq = (state.lastRemoteRollSeq || 0) + 1;
-          var nextActSeq = Math.max(state.roomActionSeq || 0, state.lastRemoteActionSeq || 0) + 1;
-          state.lastRemoteRollSeq = nextSeq;
-          state.roomActionSeq = nextActSeq;
-          state.lastRemoteActionSeq = nextActSeq;
-          var nextTurnOnRoll = n === 1 ? (who === 'p1' ? 'p2' : 'p1') : who;
-          var nextBank = n === 1 ? 0 : state.bank + n;
-          var msg = n === 1
-            ? (state.names[who] + ' rolled a RED 1! Bank lost — ' + state.names[nextTurnOnRoll] + "'s turn.")
-            : (state.names[who] + ' rolled ' + n + ' (Current Turn: +' + nextBank + ')');
+          if (state.mode === 'online' && state.roomCode) {
+            var nextSeq = (state.lastRemoteRollSeq || 0) + 1;
+            var nextActSeq = Math.max(state.roomActionSeq || 0, state.lastRemoteActionSeq || 0) + 1;
+            state.lastRemoteRollSeq = nextSeq;
+            state.roomActionSeq = nextActSeq;
+            state.lastRemoteActionSeq = nextActSeq;
+            var nextTurnOnRoll = n === 1 ? (who === 'p1' ? 'p2' : 'p1') : who;
+            var nextBank = n === 1 ? 0 : state.bank + n;
+            var msg = n === 1
+              ? (state.names[who] + ' rolled a RED 1! Bank lost — ' + state.names[nextTurnOnRoll] + "'s turn.")
+              : (state.names[who] + ' rolled ' + n + ' (Current Turn: +' + nextBank + ')');
 
-          try {
+            // Apply local state immediately before awaiting network write so UI never hangs
+            if (n === 1) {
+              await handleBust(who);
+            } else {
+              SoundFX.land();
+              state.bank = nextBank;
+              state.busy = false;
+              setStatus(msg);
+              updateUI();
+            }
+
             await updateDoc(roomDocRef(state.roomCode), {
               rollSeq: nextSeq,
               actionSeq: nextActSeq,
@@ -3483,46 +3510,23 @@
               statusText: msg,
               updatedAt: serverTimestamp()
             });
-          } catch (e) { console.error(e); }
-        }
+            return;
+          }
 
-        if (n === 1) {
-          await handleBust(who);
-          return;
-        }
-
-        SoundFX.land();
-        state.bank += n;
-        state.busy = false;
-        setStatus(state.names[who] + ' rolled ' + n + ' (Current Turn: +' + state.bank + ')');
-        updateUI();
-      }
-
-      async function runComputerTurn() {
-        setStatus('Computer is rolling…');
-        await wait(reduced ? 250 : 750);
-
-        while (!state.over && state.turn === 'p2') {
-          var n = await performRoll();
           if (n === 1) {
-            await handleBust('p2');
+            await handleBust(who);
             return;
           }
 
           SoundFX.land();
           state.bank += n;
+          state.busy = false;
+          setStatus(state.names[who] + ' rolled ' + n + ' (Current Turn: +' + state.bank + ')');
           updateUI();
-
-          var holdThreshold = state.scores.p2 > state.scores.p1 + 10 ? 12 : 15;
-          if (state.scores.p2 + state.bank >= TARGET || state.bank >= holdThreshold) {
-            setStatus('Computer rolled ' + n + ' and holds +' + state.bank + '.');
-            await wait(reduced ? 250 : 700);
-            handleHold('p2');
-            return;
-          }
-
-          setStatus('Computer rolled ' + n + ' (Turn: +' + state.bank + ') — rolling again…');
-          await wait(reduced ? 200 : 650);
+        } catch (err) {
+          state.busy = false;
+          updateUI();
+          console.error('Roll error:', err);
         }
       }
 
