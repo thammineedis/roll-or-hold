@@ -2054,7 +2054,7 @@
         </div>
         <div class="set-row">
           <span>Background Music</span>
-          <button class="switch-btn on" id="bgmToggleBtn" type="button">ON</button>
+          <button class="switch-btn" id="bgmToggleBtn" type="button">OFF</button>
         </div>
         <div class="set-row">
           <span>Sound Effects</span>
@@ -2246,7 +2246,7 @@
         ];
 
         var trackIndex = 0;
-        var bgmOn = true;
+        var bgmOn = false;
         var sfxOn = true;
         var ctx = null;
         var synthTimer = null;
@@ -3243,6 +3243,7 @@
         state.busy = false;
         state.over = false;
         state.lastRemoteRollSeq = roomData.rollSeq || 0;
+        state.lastRemoteActionSeq = roomData.actionSeq || 0;
         state.flipped = false;
 
         $('zoneP2').classList.remove('flipped');
@@ -3275,6 +3276,14 @@
 
           if ($('arenaScreen').hidden) return;
 
+          // Ignore our own optimistic local echo snapshots so we never overwrite or double-trigger
+          if (data.lastRoller === state.mySeat && (data.actionSeq || 0) <= (state.lastRemoteActionSeq || 0)) {
+            return;
+          }
+          if ((data.actionSeq || 0) > (state.lastRemoteActionSeq || 0)) {
+            state.lastRemoteActionSeq = data.actionSeq;
+          }
+
           // Handle Rematch Reset
           if (data.lastAction === 'rematch' && state.over) {
             state.over = false;
@@ -3283,6 +3292,7 @@
             state.bank = 0;
             state.turn = 'p1';
             state.lastRemoteRollSeq = data.rollSeq || 0;
+            state.lastRemoteActionSeq = data.actionSeq || 0;
             $('victoryOverlay').hidden = true;
             die.dataset.face = 5;
             setStatus(data.statusText || (state.names.p1 + "'s turn — Roll to start!"));
@@ -3320,7 +3330,7 @@
           state.busy = false;
 
           if (data.statusText) {
-            setStatus(data.statusText, data.lastAction === 'bust');
+            setStatus(data.statusText, data.lastAction === 'bust' || data.lastAction === 'bust_roll');
           }
           updateUI();
 
@@ -3351,10 +3361,15 @@
         if (state.mode === 'online' && state.roomCode) {
           state.turn = nextTurn;
           state.busy = false;
+          var nextActSeq = (state.lastRemoteActionSeq || 0) + 1;
+          state.lastRemoteActionSeq = nextActSeq;
+          updateUI();
           try {
             await updateDoc(roomDocRef(state.roomCode), {
               bank: 0,
               turn: nextTurn,
+              lastRoller: who,
+              actionSeq: nextActSeq,
               lastAction: 'bust',
               statusText: msg,
               updatedAt: serverTimestamp()
@@ -3385,7 +3400,7 @@
       }
 
       async function handleHold(who) {
-        if (state.bank <= 0) return;
+        if (state.bank <= 0 || state.busy || state.over || state.turn !== who) return;
         if (state.mode === 'online' && state.mySeat !== who) return;
 
         SoundFX.bank();
@@ -3399,10 +3414,14 @@
           ? (state.names[who] + ' reached ' + state.scores[who] + ' points and wins!')
           : (state.names[who] + ' banked +' + gained + '! ' + nextName + "'s turn.");
 
-        updateUI();
-
         if (state.mode === 'online' && state.roomCode) {
           if (!won) state.turn = nextTurn;
+          state.busy = false;
+          var nextActSeq = (state.lastRemoteActionSeq || 0) + 1;
+          state.lastRemoteActionSeq = nextActSeq;
+          setStatus(msg);
+          updateUI();
+
           try {
             await updateDoc(roomDocRef(state.roomCode), {
               p1Score: state.scores.p1,
@@ -3410,6 +3429,7 @@
               bank: 0,
               turn: won ? who : nextTurn,
               lastRoller: who,
+              actionSeq: nextActSeq,
               lastAction: 'hold',
               winner: won ? who : null,
               status: won ? 'finished' : 'playing',
@@ -3419,12 +3439,10 @@
           } catch (e) { console.error(e); }
 
           if (won) finishMatch(who);
-          else {
-            setStatus(msg);
-            updateUI();
-          }
           return;
         }
+
+        updateUI();
 
         if (won) {
           finishMatch(who);
@@ -3443,18 +3461,23 @@
 
         if (state.mode === 'online' && state.roomCode) {
           var nextSeq = (state.lastRemoteRollSeq || 0) + 1;
+          var nextActSeq = (state.lastRemoteActionSeq || 0) + 1;
           state.lastRemoteRollSeq = nextSeq;
+          state.lastRemoteActionSeq = nextActSeq;
+          var nextTurnOnRoll = n === 1 ? (who === 'p1' ? 'p2' : 'p1') : who;
           var nextBank = n === 1 ? 0 : state.bank + n;
           var msg = n === 1
-            ? (state.names[who] + ' rolled a RED 1! Bank lost.')
+            ? (state.names[who] + ' rolled a RED 1! Bank lost — ' + state.names[nextTurnOnRoll] + "'s turn.")
             : (state.names[who] + ' rolled ' + n + ' (Current Turn: +' + nextBank + ')');
 
           try {
             await updateDoc(roomDocRef(state.roomCode), {
               rollSeq: nextSeq,
+              actionSeq: nextActSeq,
               lastRoll: n,
               lastRoller: who,
               bank: nextBank,
+              turn: nextTurnOnRoll,
               lastAction: n === 1 ? 'bust_roll' : 'roll',
               statusText: msg,
               updatedAt: serverTimestamp()
