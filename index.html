@@ -103,46 +103,24 @@
     }
 
     /* ==========================================================================
-       Top Utility Bar (Always visible with Settings & Mode Actions)
+       Top Utility Bar (Live Online Count, Room Badge & Settings)
        ========================================================================== */
     .topbar {
       flex: 0 0 auto;
       display: flex;
       align-items: center;
-      justify-content: flex-end;
+      justify-content: space-between;
       gap: 8px;
-      padding: calc(10px + env(safe-area-inset-top, 0px)) 16px 10px;
+      padding: calc(10px + env(safe-area-inset-top, 0px)) 16px 8px;
       background: transparent;
       z-index: 10;
     }
 
-    .brand-mini {
+    .topbar-left {
       display: flex;
       align-items: center;
-      gap: 8px;
-    }
-
-    .brand-dot {
-      width: 11px;
-      height: 11px;
-      border-radius: 4px;
-      background: var(--lemon);
-      display: inline-block;
-    }
-
-    .brand-title {
-      font-family: var(--f-display);
-      font-size: 0.92rem;
-      letter-spacing: 0.02em;
-    }
-
-    .target-badge {
-      font-size: 0.7rem;
-      font-weight: 700;
-      padding: 3px 8px;
-      border-radius: 999px;
-      background: oklch(0.34 0.14 266);
-      color: var(--lemon);
+      gap: 6px;
+      min-width: 0;
     }
 
     .top-actions {
@@ -159,12 +137,12 @@
       min-height: 32px;
       min-width: 32px;
       line-height: 100%;
-      padding: 0 6px;
+      padding: 0 9px;
       border-radius: 999px;
       border: 1px solid var(--line);
       background: oklch(0.3 0.11 266);
-      font-size: 1rem;
-      font-weight: 500;
+      font-size: 0.78rem;
+      font-weight: 600;
       cursor: pointer;
       transition: transform 0.1s ease, background 0.15s ease, border-color 0.15s ease;
     }
@@ -174,22 +152,154 @@
     }
 
     .icon-btn svg {
-      width: 18px;
-      height: 18px;
+      width: 16px;
+      height: 16px;
       fill: currentColor;
     }
 
+    .room-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      min-height: 32px;
+      font-size: 0.74rem;
+      font-weight: 700;
+      padding: 0 11px;
+      border-radius: 999px;
+      background: oklch(0.28 0.14 155 / 0.28);
+      border: 1px solid var(--mint);
+      color: var(--mint);
+      cursor: pointer;
+    }
+
+    .online-count-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 32px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 0 11px;
+      border-radius: 999px;
+      background: oklch(0.26 0.12 266);
+      border: 1px solid oklch(0.52 0.16 155 / 0.65);
+      color: var(--mint);
+      cursor: pointer;
+    }
+
+    .online-live-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--mint);
+      box-shadow: 0 0 8px var(--mint);
+      animation: pulseDot 1.6s infinite ease-in-out;
+      flex: none;
+    }
+
     /* ==========================================================================
-       Screen 1: Start Screen + Animated Tutorial
+       Incoming Challenge Notification Banner
+       ========================================================================== */
+    .invite-toast {
+      position: absolute;
+      top: calc(52px + env(safe-area-inset-top, 0px));
+      left: 14px;
+      right: 14px;
+      z-index: 70;
+      background: oklch(0.22 0.11 266 / 0.97);
+      border: 2px solid var(--lemon);
+      border-radius: 20px;
+      padding: 13px 14px;
+      display: grid;
+      gap: 10px;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.75);
+      animation: sheetPullDown 0.25s cubic-bezier(.22, .85, .32, 1);
+    }
+
+    @keyframes sheetPullDown {
+      from { transform: translateY(-24px); opacity: 0; }
+      to   { transform: translateY(0); opacity: 1; }
+    }
+
+    .invite-toast-top {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .invite-avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      background: var(--lemon);
+      color: var(--ink);
+      font-size: 1.15rem;
+      display: grid;
+      place-items: center;
+      flex: none;
+    }
+
+    .invite-text {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+
+    .invite-text b {
+      display: block;
+      font-size: 0.9rem;
+      color: var(--lemon);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .invite-text span {
+      display: block;
+      font-size: 0.78rem;
+      color: var(--paper);
+    }
+
+    .invite-actions {
+      display: grid;
+      grid-template-columns: 0.8fr 1.4fr;
+      gap: 8px;
+    }
+
+    .invite-decline-btn {
+      min-height: 38px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: oklch(0.28 0.1 266);
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--muted);
+      cursor: pointer;
+    }
+
+    .invite-accept-btn {
+      min-height: 38px;
+      border-radius: 999px;
+      border: 0;
+      background: var(--mint);
+      color: var(--ink);
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 3px 0 oklch(0.55 0.15 155);
+    }
+
+    /* ==========================================================================
+       Screen 1: Start Screen + Animated Tutorial (Zero-Scroll Mobile Fit)
        ========================================================================== */
     .start-screen {
       flex: 1 1 auto;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      padding: 14px 16px calc(18px + env(safe-area-inset-bottom, 0px));
-      gap: 12px;
-      overflow-y: auto;
+      padding: 4px 16px calc(14px + env(safe-area-inset-bottom, 0px));
+      gap: 8px;
+      overflow: hidden;
+      min-height: 0;
       background:
         radial-gradient(circle at 85% 12%, oklch(0.45 0.22 265 / 0.45), transparent 50%),
         radial-gradient(circle at 15% 88%, oklch(0.93 0.17 100 / 0.12), transparent 50%),
@@ -198,12 +308,12 @@
 
     .start-top-stack {
       display: grid;
-      gap: 12px;
+      gap: 8px;
     }
 
     .start-bottom-stack {
       display: grid;
-      gap: 10px;
+      gap: 8px;
       margin-top: auto;
     }
 
@@ -212,16 +322,15 @@
       align-items: center;
       justify-content: center;
       flex-direction: column;
-      gap: 12px;
-      padding: .5rem 0;
-      margin-top: -.75rem;
+      gap: 8px;
+      padding: 2px 0;
     }
 
     .hero-die-icon {
-      width: 44px;
-      height: 44px;
+      width: 38px;
+      height: 38px;
       flex: none;
-      border-radius: 13px;
+      border-radius: 11px;
       background: var(--paper);
       display: grid;
       place-items: center;
@@ -230,8 +339,8 @@
     }
 
     .hero-die-icon span {
-      width: 13px;
-      height: 13px;
+      width: 11px;
+      height: 11px;
       border-radius: 50%;
       background: var(--rose);
       box-shadow: inset 0 2px 3px rgba(0, 0, 0, 0.3);
@@ -242,14 +351,14 @@
     }
 
     .hero-block h1 {
-      font: 400 clamp(1.75rem, 6vw, 2rem)/1 var(--f-display);
-      margin: 0 0 .75rem;
+      font: 400 clamp(1.55rem, 5.8vw, 1.9rem)/1 var(--f-display);
+      margin: 0 0 4px;
     }
 
     .hero-block p {
       margin: 0;
-      font-size: 1.1rem;
-      line-height: 1.2;
+      font-size: 0.9rem;
+      line-height: 1.25;
       color: var(--muted);
     }
 
@@ -261,10 +370,10 @@
     .tutorial-card {
       background: oklch(0.24 0.1 266 / 0.92);
       border: 1.5px solid var(--line);
-      border-radius: 22px;
-      padding: 13px 14px;
+      border-radius: 20px;
+      padding: 10px 12px;
       display: grid;
-      gap: 10px;
+      gap: 8px;
       box-shadow: 0 10px 26px rgba(0, 0, 0, 0.28);
     }
 
@@ -276,7 +385,7 @@
     }
 
     .tut-badge {
-      font-size: 0.72rem;
+      font-size: 0.7rem;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.06em;
@@ -290,12 +399,12 @@
     }
 
     .tut-btn {
-      height: 26px;
-      padding: 0 9px;
+      height: 24px;
+      padding: 0 8px;
       border-radius: 999px;
       border: 1px solid var(--line);
       background: oklch(0.3 0.12 266);
-      font-size: 0.72rem;
+      font-size: 0.7rem;
       font-weight: 600;
       cursor: pointer;
     }
@@ -307,12 +416,12 @@
     .tut-stage {
       background: oklch(0.18 0.08 266);
       border: 1px solid oklch(0.36 0.12 266);
-      border-radius: 16px;
-      padding: 9px 10px;
+      border-radius: 14px;
+      padding: 7px 8px;
       display: grid;
       grid-template-columns: 1fr auto 1fr;
       align-items: center;
-      gap: 8px;
+      gap: 7px;
       transition: border-color 0.25s ease, background-color 0.25s ease;
     }
 
@@ -328,12 +437,12 @@
     }
 
     .tut-player {
-      border-radius: 12px;
-      padding: 7px 8px;
+      border-radius: 11px;
+      padding: 6px 7px;
       background: oklch(0.24 0.08 266);
       border: 1.5px solid transparent;
       display: grid;
-      gap: 4px;
+      gap: 3px;
       transition: all 0.3s ease;
     }
 
@@ -351,12 +460,12 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      font-size: 0.72rem;
+      font-size: 0.7rem;
       font-weight: 700;
     }
 
     .tut-p-tag {
-      font-size: 0.62rem;
+      font-size: 0.58rem;
       padding: 1px 5px;
       border-radius: 999px;
       background: oklch(0.2 0.07 266);
@@ -369,20 +478,20 @@
     }
 
     .tut-p-score {
-      font-size: 1.05rem;
+      font-size: 0.98rem;
       font-weight: 600;
       font-variant-numeric: tabular-nums;
       line-height: 1.1;
     }
 
     .tut-p-score small {
-      font-size: 0.68rem;
+      font-size: 0.65rem;
       color: var(--muted);
       font-weight: 500;
     }
 
     .tut-p-bar {
-      height: 5px;
+      height: 4px;
       border-radius: 999px;
       background: oklch(0.16 0.06 266);
       overflow: hidden;
@@ -404,10 +513,10 @@
     }
 
     .tut-mini-btn {
-      font-size: 0.62rem;
+      font-size: 0.6rem;
       font-weight: 700;
       text-align: center;
-      padding: 3px 2px;
+      padding: 2px;
       border-radius: 999px;
       background: oklch(0.2 0.08 266);
       color: var(--muted);
@@ -447,19 +556,19 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 5px;
-      min-width: 72px;
+      gap: 4px;
+      min-width: 68px;
     }
 
     .tut-die {
-      width: 42px;
-      height: 42px;
-      border-radius: 10px;
+      width: 36px;
+      height: 36px;
+      border-radius: 9px;
       background: var(--paper);
       box-shadow: 0 5px 12px rgba(0, 0, 0, 0.4), inset 0 -3px 0 oklch(0.85 0.03 270);
       display: grid;
       grid-template: repeat(3, 1fr) / repeat(3, 1fr);
-      padding: 6px;
+      padding: 5px;
     }
 
     .tut-die.pop {
@@ -473,8 +582,8 @@
     }
 
     .tut-die .tp {
-      width: 7px;
-      height: 7px;
+      width: 6px;
+      height: 6px;
       border-radius: 50%;
       background: var(--ink);
       place-self: center;
@@ -492,14 +601,14 @@
 
     .tut-die[data-val="1"] .tp5 {
       background: var(--rose);
-      width: 10px;
-      height: 10px;
+      width: 9px;
+      height: 9px;
     }
 
     .tut-bank-chip {
-      font-size: 0.68rem;
+      font-size: 0.64rem;
       font-weight: 700;
-      padding: 2px 7px;
+      padding: 2px 6px;
       border-radius: 999px;
       background: oklch(0.28 0.13 266);
       border: 1px solid oklch(0.5 0.15 266);
@@ -515,7 +624,7 @@
     }
 
     .tut-action-pill {
-      font-size: 0.64rem;
+      font-size: 0.6rem;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.04em;
@@ -524,8 +633,8 @@
 
     .tut-caption {
       margin: 0;
-      font-size: 0.78rem;
-      line-height: 1.4;
+      font-size: 0.74rem;
+      line-height: 1.35;
       color: var(--muted);
     }
 
@@ -545,8 +654,8 @@
     }
 
     .tut-dot {
-      width: 18px;
-      height: 5px;
+      width: 16px;
+      height: 4px;
       padding: 0;
       border: 0;
       border-radius: 999px;
@@ -556,23 +665,23 @@
     }
 
     .tut-dot.active {
-      width: 28px;
+      width: 26px;
       background: var(--lemon);
     }
 
     /* Mode Selection Cards */
     .mode-cards {
       display: grid;
-      gap: 10px;
+      gap: 8px;
     }
 
     .mode-card {
       display: flex;
       align-items: center;
-      gap: 13px;
+      gap: 12px;
       width: 100%;
-      padding: 13px 16px;
-      border-radius: 20px;
+      padding: 10px 14px;
+      border-radius: 18px;
       border: 2px solid var(--line);
       background: oklch(0.28 0.12 266);
       text-align: left;
@@ -590,9 +699,9 @@
     }
 
     .mode-icon {
-      flex: 0 0 44px;
-      height: 44px;
-      border-radius: 13px;
+      flex: 0 0 40px;
+      height: 40px;
+      border-radius: 12px;
       background: oklch(0.42 0.19 265);
       color: var(--lemon);
       display: grid;
@@ -605,36 +714,222 @@
     }
 
     .mode-icon svg {
-      width: 24px;
-      height: 24px;
+      width: 22px;
+      height: 22px;
     }
 
     .mode-info {
       flex: 1 1 auto;
+      min-width: 0;
     }
 
     .mode-info b {
       display: block;
-      font-size: 1.04rem;
+      font-size: 0.98rem;
       font-weight: 700;
       margin-bottom: 1px;
     }
 
     .mode-info span {
       display: block;
-      font-size: 0.8rem;
+      font-size: 0.76rem;
       color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
-    /* Friend Name Setup Form */
-    .friend-setup {
-      background: oklch(0.25 0.1 266);
-      border: 2px solid var(--lemon);
-      border-radius: 20px;
-      padding: 14px;
+    /* ==========================================================================
+       Bottom Pull-Out Sheet Modal (Online Lobby / Room & Friend Setup)
+       ========================================================================== */
+    .sheet-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 65;
+      background: oklch(0.11 0.06 266 / 0.78);
+      backdrop-filter: blur(5px);
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: center;
+      animation: fadeIn 0.2s ease-out;
+    }
+
+    .bottom-sheet {
+      width: 100%;
+      max-width: 480px;
+      background: oklch(0.22 0.1 266);
+      border-top: 2px solid var(--lemon);
+      border-left: 1.5px solid var(--line);
+      border-right: 1.5px solid var(--line);
+      border-radius: 28px 28px 0 0;
+      padding: 10px 18px calc(22px + env(safe-area-inset-bottom, 0px));
       display: grid;
-      gap: 11px;
-      animation: slideUp 0.22s ease-out;
+      gap: 12px;
+      box-shadow: 0 -16px 48px rgba(0, 0, 0, 0.75);
+      animation: sheetPullUp 0.26s cubic-bezier(.22, .85, .32, 1);
+      touch-action: pan-y;
+    }
+
+    @keyframes sheetPullUp {
+      from { transform: translateY(100%); opacity: 0.6; }
+      to   { transform: translateY(0); opacity: 1; }
+    }
+
+    .sheet-handle {
+      width: 44px;
+      height: 5px;
+      border-radius: 999px;
+      background: oklch(0.55 0.12 266);
+      margin: 0 auto 2px;
+      cursor: pointer;
+    }
+
+    .sheet-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .sheet-header h3 {
+      margin: 0;
+      font-family: var(--f-display);
+      font-size: 1.02rem;
+      color: var(--lemon);
+    }
+
+    .online-tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      background: oklch(0.17 0.07 266);
+      padding: 4px;
+      border-radius: 999px;
+    }
+
+    .online-tab {
+      padding: 7px 10px;
+      border-radius: 999px;
+      border: 0;
+      background: transparent;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--muted);
+      cursor: pointer;
+    }
+
+    .online-tab.active {
+      background: var(--lemon);
+      color: var(--ink);
+    }
+
+    /* Online Players Lobby List inside Pull-Out Sheet */
+    .lobby-list {
+      max-height: 170px;
+      overflow-y: auto;
+      display: grid;
+      gap: 7px;
+      padding-right: 2px;
+    }
+
+    .lobby-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 8px 11px;
+      border-radius: 14px;
+      background: oklch(0.18 0.08 266);
+      border: 1px solid oklch(0.38 0.12 266);
+    }
+
+    .lobby-user {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .lobby-user b {
+      font-size: 0.88rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .challenge-btn {
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: 0;
+      background: var(--lemon);
+      color: var(--ink);
+      font-size: 0.75rem;
+      font-weight: 700;
+      cursor: pointer;
+      flex: none;
+    }
+
+    .challenge-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .lobby-empty {
+      margin: 0;
+      padding: 14px 10px;
+      border-radius: 14px;
+      background: oklch(0.18 0.08 266);
+      border: 1px dashed var(--line);
+      font-size: 0.78rem;
+      color: var(--muted);
+      text-align: center;
+      line-height: 1.4;
+    }
+
+    .room-code-box {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: oklch(0.18 0.08 266);
+      border: 1.5px dashed var(--lemon);
+    }
+
+    .room-code-val {
+      font-family: var(--f-display);
+      font-size: 1.35rem;
+      letter-spacing: 0.14em;
+      color: var(--lemon);
+    }
+
+    .copy-code-btn {
+      padding: 7px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--lemon);
+      background: oklch(0.3 0.14 266);
+      color: var(--lemon);
+      font-size: 0.76rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .online-hint {
+      margin: 0;
+      font-size: 0.78rem;
+      color: var(--mint);
+      text-align: center;
+      font-weight: 600;
+    }
+
+    .online-error {
+      margin: 0;
+      font-size: 0.78rem;
+      color: var(--rose);
+      text-align: center;
+      font-weight: 600;
     }
 
     @keyframes slideUp {
@@ -789,9 +1084,6 @@
 
     /* ==========================================================================
        Screen 2: Vertically Divided 2-Player Split Arena
-       - Expanded player score & action blocks
-       - Dulls ONLY buttons on inactive turn
-       - Compact ~50% reduced central dice roll tray
        ========================================================================== */
     .arena {
       flex: 1 1 auto;
@@ -898,7 +1190,6 @@
       color: var(--ink);
     }
 
-    /* Clear Side-by-Side Saved Score & Current Turn Stat Cards */
     .pz-metrics {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -1026,7 +1317,7 @@
     }
 
     /* ==========================================================================
-       Compact Central 3D Dice Tray (~50% Reduced Height)
+       Compact Central 3D Dice Tray
        ========================================================================== */
     .center-tray {
       flex: 0 0 clamp(20dvh, 22dvh, 25dvh);
@@ -1449,6 +1740,13 @@
   <div class="phone-shell">
     <!-- Top Utility Header (Always Accessible) -->
     <header class="topbar">
+      <div class="topbar-left">
+        <button class="online-count-pill" id="onlineCountBtn" type="button" title="View active online players">
+          <span class="online-live-dot" aria-hidden="true"></span>
+          <span id="onlineCountText">1 Online</span>
+        </button>
+        <button class="room-pill" id="roomBadgeBtn" type="button" title="Tap to copy Room Code" hidden>ROOM: -----</button>
+      </div>
       <div class="top-actions">
         <button class="icon-btn" id="flipBtn" type="button" title="Flip Player 2 panel for face-to-face tabletop play" hidden>
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10l5-6 5 6H7zm10 4l-5 6-5-6h10z"/></svg>
@@ -1461,12 +1759,26 @@
       </div>
     </header>
 
+    <!-- Real-Time Incoming Challenge Notification Banner -->
+    <div class="invite-toast" id="inviteToast" hidden role="alertdialog" aria-live="assertive" aria-labelledby="inviteSenderTitle">
+      <div class="invite-toast-top">
+        <div class="invite-avatar" aria-hidden="true">🎲</div>
+        <div class="invite-text">
+          <b id="inviteSenderTitle">Someone is trying to play with you online!</b>
+          <span id="inviteSenderSub">Tap Accept &amp; Play Game to start immediately</span>
+        </div>
+      </div>
+      <div class="invite-actions">
+        <button class="invite-decline-btn" id="declineInviteBtn" type="button">Decline</button>
+        <button class="invite-accept-btn" id="acceptInviteBtn" type="button">Accept &amp; Play Game</button>
+      </div>
+    </div>
+
     <!-- ======================================================================
          SCREEN 1: Start / Mode Selection + Interactive 6-Step Tutorial
          ====================================================================== -->
     <section class="start-screen" id="startScreen" aria-label="Game Mode Selection">
-      <div class="start-top-stack">       
-
+      <div class="start-top-stack">
         <div class="hero-block">
           <div class="hero-die-icon" aria-hidden="true"><span></span></div>
           <div class="hero-text">
@@ -1538,9 +1850,19 @@
         </div>
       </div>
 
-      <!-- Mode Selection Cards + Friend Name Setup -->
+      <!-- Mode Selection Cards -->
       <div class="start-bottom-stack">
         <div class="mode-cards">
+          <button class="mode-card" id="btnChooseOnline" type="button">
+            <div class="mode-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+            </div>
+            <div class="mode-info">
+              <b>Play Online (2 Devices)</b>
+              <span id="onlineCardSub">Invite an online friend or share a room code</span>
+            </div>
+          </button>
+
           <button class="mode-card" id="btnChooseFriend" type="button">
             <div class="mode-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
@@ -1561,22 +1883,82 @@
             </div>
           </button>
         </div>
-
-        <form class="friend-setup" id="friendForm" hidden>
-          <div class="input-row">
-            <div class="field">
-              <label for="p1Input">Player 1 (Bottom)</label>
-              <input id="p1Input" type="text" maxlength="16" placeholder="Player 1" autocomplete="off">
-            </div>
-            <div class="field">
-              <label for="p2Input">Player 2 (Top)</label>
-              <input id="p2Input" type="text" maxlength="16" placeholder="Player 2" autocomplete="off">
-            </div>
-          </div>
-          <button class="start-match-btn" type="submit">Start 2-Player Match</button>
-        </form>
       </div>
     </section>
+
+    <!-- Bottom Pull-Out Sheet: Online Multiplayer Lobby & Room Modal -->
+    <div class="sheet-backdrop" id="onlineSheetBackdrop" hidden role="dialog" aria-modal="true" aria-labelledby="onlineSheetTitle">
+      <div class="bottom-sheet" id="onlinePanel">
+        <div class="sheet-handle" id="onlineSheetHandle" title="Swipe or tap to close"></div>
+        <div class="sheet-header">
+          <h3 id="onlineSheetTitle">Play Online (<span id="sheetOnlineCount">1</span> Online)</h3>
+          <button class="modal-close-btn" id="closeOnlineSheetBtn" type="button" aria-label="Close online room panel">✕</button>
+        </div>
+
+        <div class="field">
+          <label for="onlineNameInput">Your Display Name (Shown to Opponent)</label>
+          <input id="onlineNameInput" type="text" maxlength="16" placeholder="Enter your name" autocomplete="off">
+        </div>
+
+        <div class="online-tabs">
+          <button class="online-tab active" id="tabOnlineLobby" type="button">Online Players</button>
+          <button class="online-tab" id="tabRoomCode" type="button">Room Code</button>
+        </div>
+
+        <!-- TAB 1: Live Online Users Lobby + One-Tap Challenge -->
+        <div id="onlineLobbyPane" style="display:grid; gap:10px;">
+          <div class="lobby-list" id="onlineUsersList">
+            <p class="lobby-empty">Scanning for active players on this link…</p>
+          </div>
+          <p class="online-hint" id="outgoingInviteHint" hidden>Invite sent! Waiting for your friend to tap Accept &amp; Play Game…</p>
+        </div>
+
+        <!-- TAB 2: Fallback Room Code Create / Join -->
+        <div id="roomCodePane" hidden style="display:grid; gap:10px;">
+          <button class="start-match-btn" id="createRoomBtn" type="button">Create Private Room Code</button>
+          <div class="room-code-box" id="createdRoomBox" hidden>
+            <div>
+              <div style="font-size:0.66rem; font-weight:700; color:var(--muted); text-transform:uppercase;">Share Room Code</div>
+              <div class="room-code-val" id="createdRoomCode">-----</div>
+            </div>
+            <button class="copy-code-btn" id="copyCodeBtn" type="button">Copy Code</button>
+          </div>
+          <p class="online-hint" id="waitingGuestHint" hidden>Waiting for your friend to join on their device…</p>
+
+          <form id="joinRoomPane" style="display:grid; grid-template-columns: 1fr auto; gap:8px; align-items:end;">
+            <div class="field">
+              <label for="joinCodeInput">Or Enter 5-Letter Code</label>
+              <input id="joinCodeInput" type="text" maxlength="5" placeholder="K7M2P" style="text-transform:uppercase; letter-spacing:0.14em; font-weight:700;" autocomplete="off">
+            </div>
+            <button class="start-match-btn" id="joinRoomBtn" type="submit" style="width:auto; padding:0 18px;">Join</button>
+          </form>
+        </div>
+
+        <p class="online-error" id="onlineError" hidden></p>
+      </div>
+    </div>
+
+    <!-- Bottom Pull-Out Sheet: Local 2-Player Names Setup -->
+    <div class="sheet-backdrop" id="friendSheetBackdrop" hidden role="dialog" aria-modal="true" aria-labelledby="friendSheetTitle">
+      <form class="bottom-sheet" id="friendForm">
+        <div class="sheet-handle" id="friendSheetHandle" title="Swipe or tap to close"></div>
+        <div class="sheet-header">
+          <h3 id="friendSheetTitle">Pass &amp; Play Names</h3>
+          <button class="modal-close-btn" id="closeFriendSheetBtn" type="button" aria-label="Close player names panel">✕</button>
+        </div>
+        <div class="input-row">
+          <div class="field">
+            <label for="p1Input">Player 1 (Bottom)</label>
+            <input id="p1Input" type="text" maxlength="16" placeholder="Player 1" autocomplete="off">
+          </div>
+          <div class="field">
+            <label for="p2Input">Player 2 (Top)</label>
+            <input id="p2Input" type="text" maxlength="16" placeholder="Player 2" autocomplete="off">
+          </div>
+        </div>
+        <button class="start-match-btn" type="submit">Start 2-Player Match</button>
+      </form>
+    </div>
 
     <!-- Fixed Centered Settings Modal -->
     <div class="settings-backdrop" id="settingsModalBackdrop" hidden role="dialog" aria-modal="true" aria-labelledby="settingsModalTitle">
@@ -1609,7 +1991,7 @@
          SCREEN 2: Vertically Divided 2-Player Arena
          ====================================================================== -->
     <main class="arena" id="arenaScreen" hidden>
-      <!-- TOP ZONE: Player 2 / Computer -->
+      <!-- TOP ZONE: Player 2 / Computer / Opponent -->
       <section class="player-zone top-zone dull" id="zoneP2" aria-label="Player 2 Area">
         <div class="pz-header">
           <div class="pz-identity">
@@ -1643,7 +2025,7 @@
         </div>
       </section>
 
-      <!-- CENTER SHARED 3D DICE TRAY (~50% Reduced Height) -->
+      <!-- CENTER SHARED 3D DICE TRAY -->
       <section class="center-tray" id="tray" aria-label="3D Dice Tray">
         <div class="specks" id="specks" aria-hidden="true"></div>
         <div class="die-wrap" id="dieWrap" role="button" tabindex="0" aria-label="Tap die to roll">
@@ -1652,7 +2034,7 @@
         <div class="status-banner" id="status" aria-live="polite">Player 1's turn — Roll to start!</div>
       </section>
 
-      <!-- BOTTOM ZONE: Player 1 -->
+      <!-- BOTTOM ZONE: Player 1 / Local Seat -->
       <section class="player-zone bottom-zone active" id="zoneP1" aria-label="Player 1 Area">
         <div class="pz-header">
           <div class="pz-identity">
@@ -1730,7 +2112,11 @@
     </section>
   </div>
 
-  <script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, collection, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
     (function () {
       'use strict';
 
@@ -1740,6 +2126,35 @@
       var $ = function (id) { return document.getElementById(id); };
       var wait = function (ms) { return new Promise(function (r) { setTimeout(r, ms); }); };
       var rnd = function (a, b) { return a + Math.random() * (b - a); };
+
+      /* ----------------------------------------------------------------------
+         Firebase Initialization (Uses User's Roll Or Hold Project Config)
+         ---------------------------------------------------------------------- */
+      var defaultFirebaseConfig = {
+        apiKey: "AIzaSyCEceBwQluUWCdp-G3IYoiAvXL28vApgiI",
+        authDomain: "roll-or-hold.firebaseapp.com",
+        projectId: "roll-or-hold",
+        storageBucket: "roll-or-hold.firebasestorage.app",
+        messagingSenderId: "579411034977",
+        appId: "1:579411034977:web:8668262b98e89bf55a3b20",
+        measurementId: "G-3CRC9LRNT4"
+      };
+      var appId = typeof __app_id !== 'undefined' ? __app_id : 'roll-or-hold';
+      var firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : defaultFirebaseConfig;
+
+      var fbApp = null, auth = null, db = null, authReadyPromise = null;
+      if (firebaseConfig && firebaseConfig.apiKey) {
+        try {
+          fbApp = initializeApp(firebaseConfig);
+          auth = getAuth(fbApp);
+          db = getFirestore(fbApp);
+          authReadyPromise = (typeof __initial_auth_token !== 'undefined' && __initial_auth_token)
+            ? signInWithCustomToken(auth, __initial_auth_token).then(function (cred) { return cred.user; })
+            : signInAnonymously(auth).then(function (cred) { return cred.user; });
+        } catch (err) {
+          console.error('Firebase init error:', err);
+        }
+      }
 
       /* ----------------------------------------------------------------------
          Audio & Music Engine (MP3 + Web Audio API Synthesis Fallback)
@@ -2068,14 +2483,18 @@
       var seq = 0;
 
       var state = {
-        mode: 'friend',
+        mode: 'friend', // 'friend' | 'cpu' | 'online'
         names: { p1: 'Player 1', p2: 'Player 2' },
         scores: { p1: 0, p2: 0 },
         bank: 0,
         turn: 'p1',
         busy: false,
         over: false,
-        flipped: false
+        flipped: false,
+        roomCode: null,
+        mySeat: null,   // 'p1' | 'p2' in online mode
+        lastRemoteRollSeq: 0,
+        unsubRoom: null
       };
 
       function buildDieFaces() {
@@ -2119,8 +2538,8 @@
         var isP1 = state.turn === 'p1';
         var isP2 = state.turn === 'p2';
 
-        $('nameP1').textContent = state.names.p1;
-        $('nameP2').textContent = state.names.p2;
+        $('nameP1').textContent = state.names.p1 + (state.mode === 'online' && state.mySeat === 'p1' ? ' (You)' : '');
+        $('nameP2').textContent = state.names.p2 + (state.mode === 'online' && state.mySeat === 'p2' ? ' (You)' : '');
 
         $('scoreP1').textContent = state.scores.p1;
         $('scoreP2').textContent = state.scores.p2;
@@ -2137,38 +2556,44 @@
         z2.classList.toggle('active', isP2 && !state.over);
         z2.classList.toggle('dull', !isP2 || state.over);
 
-        $('badgeP1').textContent = state.over ? 'Finished' : (isP1 ? 'Active Turn' : 'Waiting');
         if (state.over) {
+          $('badgeP1').textContent = 'Finished';
           $('badgeP2').textContent = 'Finished';
+        } else if (state.mode === 'online') {
+          $('badgeP1').textContent = isP1 ? (state.mySeat === 'p1' ? 'Your Turn' : 'Rolling…') : 'Waiting';
+          $('badgeP2').textContent = isP2 ? (state.mySeat === 'p2' ? 'Your Turn' : 'Rolling…') : 'Waiting';
         } else if (state.mode === 'cpu') {
+          $('badgeP1').textContent = isP1 ? 'Active Turn' : 'Waiting';
           $('badgeP2').textContent = isP2 ? 'AI Thinking…' : 'Computer';
         } else {
+          $('badgeP1').textContent = isP1 ? 'Active Turn' : 'Waiting';
           $('badgeP2').textContent = isP2 ? 'Active Turn' : 'Waiting';
         }
 
-        var p1CanAct = isP1 && !state.busy && !state.over;
+        var p1CanAct = isP1 && !state.busy && !state.over && (state.mode !== 'online' || state.mySeat === 'p1');
         $('rollP1').disabled = !p1CanAct;
         $('holdP1').disabled = !p1CanAct || state.bank === 0;
         $('holdP1').textContent = state.bank > 0 && isP1 ? 'Hold +' + state.bank : 'Hold';
 
-        var p2CanAct = isP2 && state.mode === 'friend' && !state.busy && !state.over;
+        var p2CanAct = isP2 && !state.busy && !state.over &&
+          (state.mode === 'friend' || (state.mode === 'online' && state.mySeat === 'p2'));
         $('rollP2').disabled = !p2CanAct;
         $('holdP2').disabled = !p2CanAct || state.bank === 0;
         $('holdP2').textContent = state.bank > 0 && isP2 ? 'Hold +' + state.bank : 'Hold';
       }
 
       /* ----------------------------------------------------------------------
-         3D Dice Roll Physics
+         3D Dice Roll Physics (Supports deterministic synced face for Online)
          ---------------------------------------------------------------------- */
-      function rollDiePhysics() {
+      function rollDiePhysics(forcedValue) {
         seq++;
         var k = '--r' + seq;
-        var n = NaN;
+        var n = forcedValue || NaN;
         var vars = ['--roll', '--dx', '--dy', '--rz', '--tx', '--ty'];
         var reach = Math.max(20, Math.min(76, (tray.clientWidth - wrap.offsetWidth) / 2 - 16));
         reach = Math.round(reach);
 
-        if (HAS_RANDOM) {
+        if (!forcedValue && HAS_RANDOM) {
           vars.forEach(function (p) { wrap.style.removeProperty(p); });
           rules.textContent =
             '.die-wrap{--roll:random(' + k + 'a,1,6,1);' +
@@ -2180,9 +2605,9 @@
           n = Math.round(parseFloat(getComputedStyle(wrap).getPropertyValue('--roll')));
         }
 
-        if (!(n >= 1 && n <= 6)) {
+        if (!(n >= 1 && n <= 6) || forcedValue) {
           rules.textContent = '';
-          n = 1 + Math.floor(Math.random() * 6);
+          if (!forcedValue) n = 1 + Math.floor(Math.random() * 6);
           wrap.style.setProperty('--roll', n);
           wrap.style.setProperty('--dx', Math.round(rnd(-reach, reach)) + 'px');
           wrap.style.setProperty('--dy', Math.round(rnd(-10, 10)) + 'px');
@@ -2202,12 +2627,12 @@
         return n;
       }
 
-      async function performRoll() {
+      async function performRoll(forcedValue) {
         state.busy = true;
         updateUI();
         SoundFX.roll();
 
-        var n = rollDiePhysics();
+        var n = rollDiePhysics(forcedValue);
         die.dataset.face = n;
         die.setAttribute('aria-label', 'Die showing ' + n);
 
@@ -2216,18 +2641,559 @@
       }
 
       /* ----------------------------------------------------------------------
-         Turn & Game Rules Logic
+         Firebase Cloud Online Multiplayer Engine (Presence, Invites & Rooms)
+         ---------------------------------------------------------------------- */
+      function roomDocRef(code) {
+        return doc(db, 'artifacts', appId, 'public', 'data', 'roll_hold_rooms', code);
+      }
+
+      function generateRoomCode() {
+        var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+        var code = '';
+        for (var i = 0; i < 5; i++) {
+          code += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        return code;
+      }
+
+      function setOnlineError(msg) {
+        var el = $('onlineError');
+        el.textContent = msg || '';
+        el.hidden = !msg;
+      }
+
+      function detachOnlineListener() {
+        if (state.unsubRoom) {
+          state.unsubRoom();
+          state.unsubRoom = null;
+        }
+        if (unsubOutgoingInvite) {
+          unsubOutgoingInvite();
+          unsubOutgoingInvite = null;
+        }
+      }
+
+      /* ----------------------------------------------------------------------
+         Online Presence & Real-Time Direct Challenge System (GitHub URL Ready)
+         ---------------------------------------------------------------------- */
+      var myUid = null;
+      var myDisplayName = 'Player-' + Math.floor(100 + Math.random() * 900);
+      var onlineUsers = [];
+      var incomingInvite = null;
+      var outgoingInviteId = null;
+      var unsubOutgoingInvite = null;
+      var heartbeatTimer = null;
+
+      $('onlineNameInput').value = myDisplayName;
+
+      function presenceCollectionRef() {
+        return collection(db, 'artifacts', appId, 'public', 'data', 'roll_hold_presence');
+      }
+
+      function presenceDocRef(uid) {
+        return doc(db, 'artifacts', appId, 'public', 'data', 'roll_hold_presence', uid);
+      }
+
+      function invitesCollectionRef() {
+        return collection(db, 'artifacts', appId, 'public', 'data', 'roll_hold_invites');
+      }
+
+      function inviteDocRef(inviteId) {
+        return doc(db, 'artifacts', appId, 'public', 'data', 'roll_hold_invites', inviteId);
+      }
+
+      async function publishMyPresence(statusOverride) {
+        if (!db || !myUid) return;
+        var typedName = ($('onlineNameInput').value || '').trim();
+        if (typedName) myDisplayName = typedName;
+        var currentStatus = statusOverride || ($('arenaScreen').hidden ? 'available' : 'in_game');
+        try {
+          await setDoc(presenceDocRef(myUid), {
+            uid: myUid,
+            name: myDisplayName,
+            status: currentStatus,
+            lastSeen: Date.now(),
+            updatedAt: serverTimestamp()
+          }, { merge: true });
+        } catch (err) {
+          console.error('Presence update failed:', err);
+        }
+      }
+
+      function renderOnlineUsersList() {
+        var now = Date.now();
+        var activeAll = onlineUsers.filter(function (u) {
+          return u && u.lastSeen && (now - u.lastSeen) < 45000;
+        });
+
+        var totalOnline = Math.max(1, activeAll.length);
+        var othersAvailable = activeAll.filter(function (u) {
+          return u.uid !== myUid;
+        });
+
+        $('onlineCountText').textContent = totalOnline + ' Online';
+        $('sheetOnlineCount').textContent = totalOnline;
+        $('onlineCardSub').textContent = othersAvailable.length > 0
+          ? (othersAvailable.length + ' other player' + (othersAvailable.length > 1 ? 's' : '') + ' online right now — Tap to challenge!')
+          : 'Share your URL — ' + totalOnline + ' user online now';
+
+        var listEl = $('onlineUsersList');
+        listEl.textContent = '';
+
+        if (othersAvailable.length === 0) {
+          var empty = document.createElement('p');
+          empty.className = 'lobby-empty';
+          empty.textContent = 'No other players online yet. Share your GitHub URL with a friend — as soon as they open it, their name will appear right here!';
+          listEl.appendChild(empty);
+          return;
+        }
+
+        othersAvailable.forEach(function (player) {
+          var row = document.createElement('div');
+          row.className = 'lobby-item';
+
+          var left = document.createElement('div');
+          left.className = 'lobby-user';
+
+          var dot = document.createElement('span');
+          dot.className = 'online-live-dot';
+          left.appendChild(dot);
+
+          var nameEl = document.createElement('b');
+          nameEl.textContent = player.name || 'Guest Player';
+          left.appendChild(nameEl);
+
+          var btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'challenge-btn';
+          var isBusy = player.status === 'in_game';
+          btn.textContent = isBusy ? 'In Match' : 'Challenge';
+          btn.disabled = isBusy;
+          btn.addEventListener('click', function () {
+            sendDirectChallenge(player);
+          });
+
+          row.appendChild(left);
+          row.appendChild(btn);
+          listEl.appendChild(row);
+        });
+      }
+
+      async function sendDirectChallenge(targetPlayer) {
+        if (!db || !myUid || !targetPlayer || !targetPlayer.uid) return;
+        setOnlineError('');
+        var hostName = ($('onlineNameInput').value || '').trim() || myDisplayName;
+        myDisplayName = hostName;
+        await publishMyPresence('available');
+
+        var code = generateRoomCode();
+        var invId = myUid + '_' + targetPlayer.uid;
+        outgoingInviteId = invId;
+
+        try {
+          await setDoc(roomDocRef(code), {
+            code: code,
+            status: 'waiting',
+            p1Uid: myUid,
+            p1Name: hostName,
+            p2Uid: targetPlayer.uid,
+            p2Name: targetPlayer.name || 'Player 2',
+            p1Score: 0,
+            p2Score: 0,
+            bank: 0,
+            turn: 'p1',
+            rollSeq: 0,
+            lastRoll: 5,
+            lastRoller: null,
+            lastAction: 'init',
+            winner: null,
+            statusText: hostName + "'s turn — Roll to start!",
+            createdAt: serverTimestamp()
+          });
+
+          await setDoc(inviteDocRef(invId), {
+            id: invId,
+            fromUid: myUid,
+            fromName: hostName,
+            toUid: targetPlayer.uid,
+            toName: targetPlayer.name || 'Player 2',
+            roomCode: code,
+            status: 'pending',
+            createdAt: Date.now()
+          });
+
+          $('outgoingInviteHint').textContent = 'Sent invite to ' + (targetPlayer.name || 'friend') + '! Waiting for Accept & Play Game…';
+          $('outgoingInviteHint').hidden = false;
+
+          if (unsubOutgoingInvite) unsubOutgoingInvite();
+          unsubOutgoingInvite = onSnapshot(inviteDocRef(invId), function (snap) {
+            if (!snap.exists()) return;
+            var inv = snap.data();
+            if (inv.status === 'accepted') {
+              if (unsubOutgoingInvite) { unsubOutgoingInvite(); unsubOutgoingInvite = null; }
+              $('outgoingInviteHint').hidden = true;
+              state.mySeat = 'p1';
+              state.roomCode = code;
+              subscribeToRoom(code);
+              publishMyPresence('in_game');
+            } else if (inv.status === 'declined') {
+              if (unsubOutgoingInvite) { unsubOutgoingInvite(); unsubOutgoingInvite = null; }
+              $('outgoingInviteHint').hidden = true;
+              setOnlineError((targetPlayer.name || 'Player') + ' declined the invite.');
+            }
+          });
+        } catch (err) {
+          console.error('Failed to send challenge:', err);
+          setOnlineError('Could not send invite. Check internet connection.');
+        }
+      }
+
+      function initRealtimePresenceAndInvites() {
+        if (!db || !authReadyPromise) return;
+        authReadyPromise.then(async function (user) {
+          if (!user) return;
+          myUid = user.uid;
+          await publishMyPresence('available');
+
+          if (heartbeatTimer) clearInterval(heartbeatTimer);
+          heartbeatTimer = setInterval(function () {
+            publishMyPresence();
+            renderOnlineUsersList();
+          }, 15000);
+
+          onSnapshot(presenceCollectionRef(), function (snapshot) {
+            var list = [];
+            snapshot.forEach(function (docSnap) {
+              list.push(docSnap.data());
+            });
+            onlineUsers = list;
+            renderOnlineUsersList();
+          }, function (err) {
+            console.error('Presence listener error:', err);
+          });
+
+          onSnapshot(invitesCollectionRef(), function (snapshot) {
+            var latestPending = null;
+            snapshot.forEach(function (docSnap) {
+              var inv = docSnap.data();
+              if (inv && inv.toUid === myUid && inv.status === 'pending' && (Date.now() - (inv.createdAt || 0)) < 60000) {
+                if (!latestPending || (inv.createdAt || 0) > (latestPending.createdAt || 0)) {
+                  latestPending = inv;
+                }
+              }
+            });
+
+            incomingInvite = latestPending;
+            if (latestPending) {
+              $('inviteSenderTitle').textContent = (latestPending.fromName || 'A friend') + ' is trying to play with you online!';
+              $('inviteSenderSub').textContent = 'Tap Accept & Play Game to join ' + (latestPending.fromName || 'them') + ' now';
+              $('inviteToast').hidden = false;
+            } else {
+              $('inviteToast').hidden = true;
+            }
+          }, function (err) {
+            console.error('Invites listener error:', err);
+          });
+        }).catch(function (err) {
+          console.error('Auth presence failed:', err);
+        });
+      }
+
+      window.addEventListener('beforeunload', function () {
+        if (db && myUid) {
+          deleteDoc(presenceDocRef(myUid)).catch(function () {});
+        }
+      });
+
+      $('acceptInviteBtn').addEventListener('click', async function () {
+        if (!incomingInvite || !db || !myUid) return;
+        SoundFX.unlockAndPlayBgm();
+        var inv = incomingInvite;
+        $('inviteToast').hidden = true;
+        incomingInvite = null;
+
+        var myName = ($('onlineNameInput').value || '').trim() || myDisplayName;
+        myDisplayName = myName;
+
+        try {
+          var snap = await getDoc(roomDocRef(inv.roomCode));
+          if (!snap.exists()) {
+            setOnlineError('That game room has expired.');
+            return;
+          }
+          var roomData = snap.data();
+          var updatedRoom = {
+            p2Uid: myUid,
+            p2Name: myName,
+            status: 'playing',
+            statusText: (roomData.p1Name || inv.fromName || 'Player 1') + "'s turn — Roll to start!",
+            updatedAt: serverTimestamp()
+          };
+
+          await updateDoc(roomDocRef(inv.roomCode), updatedRoom);
+          await updateDoc(inviteDocRef(inv.id), {
+            status: 'accepted',
+            toName: myName
+          });
+
+          await publishMyPresence('in_game');
+          launchOnlineArena(inv.roomCode, 'p2', Object.assign({}, roomData, updatedRoom));
+          subscribeToRoom(inv.roomCode);
+        } catch (err) {
+          console.error('Accept invite failed:', err);
+          setOnlineError('Could not start online game. Try again.');
+        }
+      });
+
+      $('declineInviteBtn').addEventListener('click', async function () {
+        if (!incomingInvite || !db) return;
+        var invId = incomingInvite.id;
+        $('inviteToast').hidden = true;
+        incomingInvite = null;
+        try {
+          await updateDoc(inviteDocRef(invId), { status: 'declined' });
+        } catch (err) {}
+      });
+
+      initRealtimePresenceAndInvites();
+
+      async function createOnlineRoom() {
+        if (!db || !authReadyPromise) {
+          setOnlineError('Firebase is not connected. Check internet connection.');
+          return;
+        }
+        setOnlineError('');
+        $('createRoomBtn').disabled = true;
+
+        try {
+          var user = await authReadyPromise;
+          if (!user) throw new Error('Auth failed');
+
+          var hostName = ($('onlineNameInput').value || '').trim() || myDisplayName || 'Player 1';
+          myDisplayName = hostName;
+          var code = generateRoomCode();
+
+          await setDoc(roomDocRef(code), {
+            code: code,
+            status: 'waiting',
+            p1Uid: user.uid,
+            p1Name: hostName,
+            p2Uid: null,
+            p2Name: 'Waiting…',
+            p1Score: 0,
+            p2Score: 0,
+            bank: 0,
+            turn: 'p1',
+            rollSeq: 0,
+            lastRoll: 5,
+            lastRoller: null,
+            lastAction: 'init',
+            winner: null,
+            statusText: hostName + "'s turn — Roll to start!",
+            createdAt: serverTimestamp()
+          });
+
+          state.mySeat = 'p1';
+          state.roomCode = code;
+          $('createdRoomCode').textContent = code;
+          $('createdRoomBox').hidden = false;
+          $('waitingGuestHint').hidden = false;
+
+          subscribeToRoom(code);
+        } catch (err) {
+          console.error(err);
+          setOnlineError('Could not create room. Ensure Firestore & Anonymous Auth are enabled.');
+        } finally {
+          $('createRoomBtn').disabled = false;
+        }
+      }
+
+      async function joinOnlineRoom(rawCode) {
+        if (!db || !authReadyPromise) {
+          setOnlineError('Firebase is not connected.');
+          return;
+        }
+        var code = (rawCode || '').trim().toUpperCase();
+        if (code.length < 4) {
+          setOnlineError('Please enter a valid 5-character Room Code.');
+          return;
+        }
+        setOnlineError('');
+        $('joinRoomBtn').disabled = true;
+
+        try {
+          var user = await authReadyPromise;
+          if (!user) throw new Error('Auth failed');
+
+          var snap = await getDoc(roomDocRef(code));
+          if (!snap.exists()) {
+            setOnlineError('Room "' + code + '" not found. Check the code and try again.');
+            return;
+          }
+          var data = snap.data();
+          if (data.status !== 'waiting' && data.p2Uid && data.p2Uid !== user.uid) {
+            setOnlineError('This room already has 2 players.');
+            return;
+          }
+
+          var guestName = ($('onlineNameInput').value || '').trim() || myDisplayName || 'Player 2';
+          myDisplayName = guestName;
+          await updateDoc(roomDocRef(code), {
+            p2Uid: user.uid,
+            p2Name: guestName,
+            status: 'playing',
+            statusText: (data.p1Name || 'Player 1') + "'s turn — Roll to start!",
+            updatedAt: serverTimestamp()
+          });
+
+          await publishMyPresence('in_game');
+          launchOnlineArena(code, 'p2', Object.assign({}, data, {
+            p2Name: guestName,
+            status: 'playing'
+          }));
+          subscribeToRoom(code);
+        } catch (err) {
+          console.error(err);
+          setOnlineError('Unable to join room. Check your connection.');
+        } finally {
+          $('joinRoomBtn').disabled = false;
+        }
+      }
+
+      function launchOnlineArena(code, seat, roomData) {
+        SoundFX.unlockAndPlayBgm();
+        state.mode = 'online';
+        state.roomCode = code;
+        state.mySeat = seat;
+        state.names.p1 = roomData.p1Name || 'Player 1';
+        state.names.p2 = roomData.p2Name || 'Player 2';
+        state.scores.p1 = roomData.p1Score || 0;
+        state.scores.p2 = roomData.p2Score || 0;
+        state.bank = roomData.bank || 0;
+        state.turn = roomData.turn || 'p1';
+        state.busy = false;
+        state.over = false;
+        state.lastRemoteRollSeq = roomData.rollSeq || 0;
+        state.flipped = false;
+
+        $('zoneP2').classList.remove('flipped');
+        $('startScreen').hidden = true;
+        $('onlineSheetBackdrop').hidden = true;
+        $('victoryOverlay').hidden = true;
+        $('arenaScreen').hidden = false;
+        $('changeModeBtn').hidden = false;
+        $('flipBtn').hidden = true;
+        $('roomBadgeBtn').textContent = 'ROOM: ' + code;
+        $('roomBadgeBtn').hidden = false;
+
+        die.dataset.face = roomData.lastRoll || 5;
+        setStatus(roomData.statusText || (state.names.p1 + "'s turn — Roll to start!"));
+        updateUI();
+      }
+
+      function subscribeToRoom(code) {
+        detachOnlineListener();
+        state.unsubRoom = onSnapshot(roomDocRef(code), async function (snap) {
+          if (!snap.exists()) return;
+          var data = snap.data();
+
+          // Launch arena for Host once Guest joins
+          if ($('arenaScreen').hidden && data.status === 'playing') {
+            publishMyPresence('in_game');
+            launchOnlineArena(code, state.mySeat, data);
+            return;
+          }
+
+          if ($('arenaScreen').hidden) return;
+
+          // Handle Rematch Reset
+          if (data.lastAction === 'rematch' && state.over) {
+            state.over = false;
+            state.busy = false;
+            state.scores = { p1: 0, p2: 0 };
+            state.bank = 0;
+            state.turn = 'p1';
+            state.lastRemoteRollSeq = data.rollSeq || 0;
+            $('victoryOverlay').hidden = true;
+            die.dataset.face = 5;
+            setStatus(data.statusText || (state.names.p1 + "'s turn — Roll to start!"));
+            updateUI();
+            return;
+          }
+
+          // Animate remote dice roll if triggered by the other device
+          if ((data.rollSeq || 0) > state.lastRemoteRollSeq) {
+            state.lastRemoteRollSeq = data.rollSeq;
+            if (data.lastRoller !== state.mySeat) {
+              await performRoll(data.lastRoll);
+              if (data.lastRoll === 1) {
+                SoundFX.bust();
+                tray.classList.remove('bust');
+                void tray.offsetWidth;
+                tray.classList.add('bust');
+                setTimeout(function () { tray.classList.remove('bust'); }, 900);
+              } else {
+                SoundFX.land();
+              }
+            }
+          } else if (data.lastAction === 'hold' && data.lastRoller !== state.mySeat) {
+            SoundFX.bank();
+          }
+
+          state.names.p1 = data.p1Name || state.names.p1;
+          state.names.p2 = data.p2Name || state.names.p2;
+          state.scores.p1 = data.p1Score || 0;
+          state.scores.p2 = data.p2Score || 0;
+          state.bank = data.bank || 0;
+          state.turn = data.turn || 'p1';
+          state.busy = false;
+
+          if (data.statusText) {
+            setStatus(data.statusText, data.lastAction === 'bust');
+          }
+          updateUI();
+
+          if (data.winner && !state.over) {
+            finishMatch(data.winner);
+          }
+        }, function (err) {
+          console.error('Online room sync error:', err);
+        });
+      }
+
+      /* ----------------------------------------------------------------------
+         Turn & Game Rules Logic (Offline + Online Synced)
          ---------------------------------------------------------------------- */
       async function handleBust(who) {
         SoundFX.bust();
         state.bank = 0;
-        var nextName = who === 'p1' ? state.names.p2 : state.names.p1;
-        setStatus(state.names[who] + ' rolled a RED 1! Bank lost — ' + nextName + "'s turn.", true);
+        var nextTurn = who === 'p1' ? 'p2' : 'p1';
+        var nextName = state.names[nextTurn];
+        var msg = state.names[who] + ' rolled a RED 1! Bank lost — ' + nextName + "'s turn.";
+        setStatus(msg, true);
 
         tray.classList.remove('bust');
         void tray.offsetWidth;
         tray.classList.add('bust');
         updateUI();
+
+        if (state.mode === 'online' && state.roomCode) {
+          state.turn = nextTurn;
+          state.busy = false;
+          try {
+            await updateDoc(roomDocRef(state.roomCode), {
+              bank: 0,
+              turn: nextTurn,
+              lastAction: 'bust',
+              statusText: msg,
+              updatedAt: serverTimestamp()
+            });
+          } catch (e) { console.error(e); }
+          await wait(reduced ? 350 : 900);
+          tray.classList.remove('bust');
+          updateUI();
+          return;
+        }
 
         await wait(reduced ? 350 : 1050);
         tray.classList.remove('bust');
@@ -2247,27 +3213,83 @@
         }
       }
 
-      function handleHold(who) {
+      async function handleHold(who) {
         if (state.bank <= 0) return;
+        if (state.mode === 'online' && state.mySeat !== who) return;
+
         SoundFX.bank();
         var gained = state.bank;
         state.scores[who] += gained;
         state.bank = 0;
+        var won = state.scores[who] >= TARGET;
+        var nextTurn = who === 'p1' ? 'p2' : 'p1';
+        var nextName = state.names[nextTurn];
+        var msg = won
+          ? (state.names[who] + ' reached ' + state.scores[who] + ' points and wins!')
+          : (state.names[who] + ' banked +' + gained + '! ' + nextName + "'s turn.");
+
         updateUI();
 
-        if (state.scores[who] >= TARGET) {
+        if (state.mode === 'online' && state.roomCode) {
+          if (!won) state.turn = nextTurn;
+          try {
+            await updateDoc(roomDocRef(state.roomCode), {
+              p1Score: state.scores.p1,
+              p2Score: state.scores.p2,
+              bank: 0,
+              turn: won ? who : nextTurn,
+              lastRoller: who,
+              lastAction: 'hold',
+              winner: won ? who : null,
+              status: won ? 'finished' : 'playing',
+              statusText: msg,
+              updatedAt: serverTimestamp()
+            });
+          } catch (e) { console.error(e); }
+
+          if (won) finishMatch(who);
+          else {
+            setStatus(msg);
+            updateUI();
+          }
+          return;
+        }
+
+        if (won) {
           finishMatch(who);
           return;
         }
 
-        var nextName = who === 'p1' ? state.names.p2 : state.names.p1;
-        setStatus(state.names[who] + ' banked +' + gained + '! ' + nextName + "'s turn.");
+        setStatus(msg);
         switchTurn();
       }
 
       async function handleHumanRoll(who) {
         if (state.busy || state.over || state.turn !== who) return;
+        if (state.mode === 'online' && state.mySeat !== who) return;
+
         var n = await performRoll();
+
+        if (state.mode === 'online' && state.roomCode) {
+          var nextSeq = (state.lastRemoteRollSeq || 0) + 1;
+          state.lastRemoteRollSeq = nextSeq;
+          var nextBank = n === 1 ? 0 : state.bank + n;
+          var msg = n === 1
+            ? (state.names[who] + ' rolled a RED 1! Bank lost.')
+            : (state.names[who] + ' rolled ' + n + ' (Current Turn: +' + nextBank + ')');
+
+          try {
+            await updateDoc(roomDocRef(state.roomCode), {
+              rollSeq: nextSeq,
+              lastRoll: n,
+              lastRoller: who,
+              bank: nextBank,
+              lastAction: n === 1 ? 'bust_roll' : 'roll',
+              statusText: msg,
+              updatedAt: serverTimestamp()
+            });
+          } catch (e) { console.error(e); }
+        }
 
         if (n === 1) {
           await handleBust(who);
@@ -2315,9 +3337,12 @@
         updateUI();
 
         var cpuWon = (state.mode === 'cpu' && winnerKey === 'p2');
-        $('trophyBadge').classList.toggle('lose-badge', cpuWon);
+        var onlineLost = (state.mode === 'online' && state.mySeat && winnerKey !== state.mySeat);
+        var lostMatch = cpuWon || onlineLost;
 
-        if (cpuWon) {
+        $('trophyBadge').classList.toggle('lose-badge', lostMatch);
+
+        if (lostMatch) {
           SoundFX.winComputer();
         } else {
           SoundFX.winHuman();
@@ -2368,9 +3393,12 @@
          Navigation & Match Lifecycle
          ---------------------------------------------------------------------- */
       function startMatch(mode, p1Name, p2Name) {
+        detachOnlineListener();
         SoundFX.unlockAndPlayBgm();
 
         state.mode = mode;
+        state.roomCode = null;
+        state.mySeat = null;
         state.names.p1 = (p1Name || '').trim() || 'Player 1';
         state.names.p2 = mode === 'cpu' ? 'Computer' : ((p2Name || '').trim() || 'Player 2');
         state.scores = { p1: 0, p2: 0 };
@@ -2385,9 +3413,12 @@
         }
 
         $('startScreen').hidden = true;
+        $('onlineSheetBackdrop').hidden = true;
+        $('friendSheetBackdrop').hidden = true;
         $('victoryOverlay').hidden = true;
         $('arenaScreen').hidden = false;
         $('changeModeBtn').hidden = false;
+        $('roomBadgeBtn').hidden = true;
         $('flipBtn').hidden = (mode !== 'friend');
 
         die.dataset.face = 5;
@@ -2398,24 +3429,134 @@
       }
 
       function showModeScreen() {
+        detachOnlineListener();
         state.over = true;
         state.busy = false;
+        state.roomCode = null;
+        state.mySeat = null;
         $('arenaScreen').hidden = true;
         $('victoryOverlay').hidden = true;
+        $('onlineSheetBackdrop').hidden = true;
+        $('friendSheetBackdrop').hidden = true;
         $('changeModeBtn').hidden = true;
         $('flipBtn').hidden = true;
+        $('roomBadgeBtn').hidden = true;
         $('startScreen').hidden = false;
+        publishMyPresence('available');
         Tutorial.reset();
       }
 
       /* ----------------------------------------------------------------------
-         Event Listeners
+         Event Listeners & Bottom Pull-Out Sheet Gestures
          ---------------------------------------------------------------------- */
+      function wireBottomSheetDismiss(backdropId, sheetId, closeBtnId, handleId) {
+        var backdrop = $(backdropId);
+        var sheet = $(sheetId);
+        var startY = 0;
+
+        $(closeBtnId).addEventListener('click', function () {
+          backdrop.hidden = true;
+        });
+
+        $(handleId).addEventListener('click', function () {
+          backdrop.hidden = true;
+        });
+
+        backdrop.addEventListener('click', function (e) {
+          if (e.target === backdrop) backdrop.hidden = true;
+        });
+
+        sheet.addEventListener('touchstart', function (e) {
+          if (e.touches && e.touches.length === 1) startY = e.touches[0].clientY;
+        }, { passive: true });
+
+        sheet.addEventListener('touchend', function (e) {
+          if (e.changedTouches && e.changedTouches.length === 1) {
+            var deltaY = e.changedTouches[0].clientY - startY;
+            if (deltaY > 65) backdrop.hidden = true;
+          }
+        }, { passive: true });
+      }
+
+      wireBottomSheetDismiss('onlineSheetBackdrop', 'onlinePanel', 'closeOnlineSheetBtn', 'onlineSheetHandle');
+      wireBottomSheetDismiss('friendSheetBackdrop', 'friendForm', 'closeFriendSheetBtn', 'friendSheetHandle');
+
+      // Online Mode Controls
+      $('onlineCountBtn').addEventListener('click', function () {
+        $('btnChooseOnline').click();
+      });
+
+      $('onlineNameInput').addEventListener('change', function () {
+        publishMyPresence();
+      });
+
+      $('btnChooseOnline').addEventListener('click', function () {
+        SoundFX.unlockAndPlayBgm();
+        $('btnChooseOnline').classList.add('selected');
+        $('btnChooseFriend').classList.remove('selected');
+        $('btnChooseCpu').classList.remove('selected');
+        $('friendSheetBackdrop').hidden = true;
+        $('onlineSheetBackdrop').hidden = false;
+        setOnlineError('');
+        publishMyPresence('available');
+        renderOnlineUsersList();
+      });
+
+      $('tabOnlineLobby').addEventListener('click', function () {
+        $('tabOnlineLobby').classList.add('active');
+        $('tabRoomCode').classList.remove('active');
+        $('onlineLobbyPane').hidden = false;
+        $('roomCodePane').hidden = true;
+        setOnlineError('');
+        renderOnlineUsersList();
+      });
+
+      $('tabRoomCode').addEventListener('click', function () {
+        $('tabRoomCode').classList.add('active');
+        $('tabOnlineLobby').classList.remove('active');
+        $('roomCodePane').hidden = false;
+        $('onlineLobbyPane').hidden = true;
+        setOnlineError('');
+      });
+
+      $('createRoomBtn').addEventListener('click', createOnlineRoom);
+
+      $('joinRoomPane').addEventListener('submit', function (e) {
+        e.preventDefault();
+        joinOnlineRoom($('joinCodeInput').value);
+      });
+
+      function copyRoomCodeToClipboard(code, btnEl) {
+        if (!code) return;
+        var temp = document.createElement('textarea');
+        temp.value = code;
+        document.body.appendChild(temp);
+        temp.select();
+        try { document.execCommand('copy'); } catch (err) {}
+        document.body.removeChild(temp);
+        if (btnEl) {
+          var prev = btnEl.textContent;
+          btnEl.textContent = 'Copied!';
+          setTimeout(function () { btnEl.textContent = prev; }, 1400);
+        }
+      }
+
+      $('copyCodeBtn').addEventListener('click', function () {
+        copyRoomCodeToClipboard(state.roomCode, this);
+      });
+
+      $('roomBadgeBtn').addEventListener('click', function () {
+        copyRoomCodeToClipboard(state.roomCode, this);
+      });
+
+      // Local Friend & CPU Mode Controls
       $('btnChooseFriend').addEventListener('click', function () {
         SoundFX.unlockAndPlayBgm();
         $('btnChooseFriend').classList.add('selected');
+        $('btnChooseOnline').classList.remove('selected');
         $('btnChooseCpu').classList.remove('selected');
-        $('friendForm').hidden = false;
+        $('onlineSheetBackdrop').hidden = true;
+        $('friendSheetBackdrop').hidden = false;
         $('p1Input').focus();
       });
 
@@ -2427,7 +3568,9 @@
       $('btnChooseCpu').addEventListener('click', function () {
         $('btnChooseCpu').classList.add('selected');
         $('btnChooseFriend').classList.remove('selected');
-        $('friendForm').hidden = true;
+        $('btnChooseOnline').classList.remove('selected');
+        $('friendSheetBackdrop').hidden = true;
+        $('onlineSheetBackdrop').hidden = true;
         startMatch('cpu', 'You', 'Computer');
       });
 
@@ -2436,7 +3579,9 @@
       $('rollP2').addEventListener('click', function () { handleHumanRoll('p2'); });
       $('holdP2').addEventListener('click', function () { handleHold('p2'); });
       $('dieWrap').addEventListener('click', function () {
-        if (state.turn === 'p1' || state.mode === 'friend') {
+        if (state.mode === 'online') {
+          if (state.turn === state.mySeat) handleHumanRoll(state.mySeat);
+        } else if (state.turn === 'p1' || state.mode === 'friend') {
           handleHumanRoll(state.turn);
         }
       });
@@ -2482,7 +3627,24 @@
         $('zoneP2').classList.toggle('flipped', state.flipped);
       });
 
-      $('playAgainBtn').addEventListener('click', function () {
+      $('playAgainBtn').addEventListener('click', async function () {
+        if (state.mode === 'online' && state.roomCode && db) {
+          try {
+            await updateDoc(roomDocRef(state.roomCode), {
+              p1Score: 0,
+              p2Score: 0,
+              bank: 0,
+              turn: 'p1',
+              lastRoll: 5,
+              lastAction: 'rematch',
+              winner: null,
+              status: 'playing',
+              statusText: state.names.p1 + "'s turn — Roll to start!",
+              updatedAt: serverTimestamp()
+            });
+          } catch (e) { console.error(e); }
+          return;
+        }
         startMatch(state.mode, state.names.p1, state.names.p2);
       });
       $('victoryModeBtn').addEventListener('click', showModeScreen);
