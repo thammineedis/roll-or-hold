@@ -4,9 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="author" content="Srinivas Thammineedi">
-  <meta name="designer" content="Srinivas Thammineedi">
-  <title>Roll or Hold | Online Player to Player | Dice Game</title>
+  <title>Roll or Hold — 2-Player Tactile Dice Duel</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,7 +12,7 @@
 
   <style>
     /* ==========================================================================
-       CSS Custom Properties & Houdini @property for 3D CSS Random Dice Physics
+       CSS Custom Properties & Houdini @property for 3D CSS Dice Physics
        ========================================================================== */
     @property --roll { syntax: '<number>'; inherits: true; initial-value: 1; }
     @property --dx   { syntax: '<length>'; inherits: true; initial-value: 0px; }
@@ -26,21 +24,25 @@
     @property --fy   { syntax: '<angle>';  inherits: false; initial-value: 0deg; }
 
     :root {
-      --bg-outer: #0b0f19;
-      --cobalt: oklch(0.32 0.14 265);
-      --tray-bg: oklch(0.21 0.09 266);
-      --ink: oklch(0.18 0.06 270);
-      --lemon: oklch(0.93 0.17 100);
-      --lemon-shadow: oklch(0.68 0.15 95);
+      --bg-outer: #070a12;
+      --cobalt: oklch(0.28 0.13 265);
+      --cobalt-deep: oklch(0.20 0.09 266);
+      --tray-bg: oklch(0.17 0.08 266);
+      --ink: oklch(0.16 0.05 270);
+      --lemon: oklch(0.93 0.18 98);
+      --lemon-shadow: oklch(0.65 0.16 92);
       --paper: oklch(0.985 0.006 270);
-      --rose: oklch(0.63 0.25 18);
-      --mint: oklch(0.78 0.17 155);
-      --muted: oklch(0.78 0.04 270);
-      --line: oklch(0.45 0.12 266);
+      --rose: oklch(0.62 0.25 18);
+      --rose-glow: oklch(0.62 0.25 18 / 0.45);
+      --mint: oklch(0.79 0.17 156);
+      --mint-shadow: oklch(0.55 0.15 156);
+      --muted: oklch(0.77 0.04 270);
+      --line: oklch(0.42 0.12 266);
+      --glass: oklch(0.24 0.10 266 / 0.78);
 
       --f-display: 'Dela Gothic One', 'Arial Black', Impact, sans-serif;
       --f-body: 'Instrument Sans', system-ui, -apple-system, sans-serif;
-      --die: clamp(62px, 15vw, 76px);
+      --die: clamp(66px, 16vw, 82px);
       color-scheme: dark;
     }
 
@@ -58,7 +60,9 @@
       padding: 0;
       height: 100%;
       width: 100%;
-      background: var(--bg-outer);
+      background:
+        radial-gradient(circle at 50% 0%, oklch(0.22 0.12 265 / 0.45), transparent 65%),
+        var(--bg-outer);
       color: var(--paper);
       font-family: var(--f-body);
       overflow: hidden;
@@ -76,7 +80,7 @@
     }
 
     /* ==========================================================================
-       Mobile-First Centered Shell (100dvh)
+       Mobile-First Centered App Shell (100dvh)
        ========================================================================== */
     .phone-shell {
       position: relative;
@@ -84,28 +88,31 @@
       max-width: 480px;
       height: 100dvh;
       margin: 0 auto;
-      background: var(--cobalt);
+      background:
+        radial-gradient(circle at 85% 8%, oklch(0.44 0.20 265 / 0.42), transparent 48%),
+        radial-gradient(circle at 12% 92%, oklch(0.93 0.18 98 / 0.10), transparent 48%),
+        var(--cobalt);
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      box-shadow: 0 0 60px rgba(0, 0, 0, 0.75);
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.85);
     }
 
     @media (min-width: 500px) {
       body {
         display: grid;
         place-items: center;
-        padding: 12px;
+        padding: 14px;
       }
       .phone-shell {
-        height: min(900px, calc(100dvh - 24px));
-        border-radius: 36px;
-        border: 3px solid oklch(0.45 0.14 266);
+        height: min(910px, calc(100dvh - 28px));
+        border-radius: 38px;
+        border: 2.5px solid oklch(0.46 0.14 266);
       }
     }
 
     /* ==========================================================================
-       Top Utility Bar (Live Online Count, Room Badge & Settings)
+       Top Navigation & Presence Bar
        ========================================================================== */
     .topbar {
       flex: 0 0 auto;
@@ -114,82 +121,48 @@
       justify-content: space-between;
       gap: 8px;
       padding: calc(10px + env(safe-area-inset-top, 0px)) 16px 8px;
-      background: transparent;
-      z-index: 10;
+      z-index: 15;
     }
 
-    .topbar-left {
+    .topbar-left, .top-actions {
       display: flex;
       align-items: center;
       gap: 6px;
       min-width: 0;
     }
 
-    .top-actions {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .icon-btn {
+    .pill-btn {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 5px;
-      min-height: 32px;
-      min-width: 32px;
-      line-height: 100%;
-      padding: 0 9px;
+      gap: 6px;
+      min-height: 34px;
+      padding: 0 11px;
       border-radius: 999px;
       border: 1px solid var(--line);
-      background: oklch(0.3 0.11 266);
-      font-size: 0.78rem;
-      font-weight: 600;
+      background: var(--glass);
+      backdrop-filter: blur(8px);
+      font-size: 0.76rem;
+      font-weight: 700;
       cursor: pointer;
-      transition: transform 0.1s ease, background 0.15s ease, border-color 0.15s ease;
+      transition: transform 0.12s ease, border-color 0.18s ease, background 0.18s ease;
     }
 
-    .icon-btn:active {
+    .pill-btn:active {
       transform: scale(0.95);
     }
 
-    .icon-btn svg {
-      width: 16px;
-      height: 16px;
-      fill: currentColor;
+    .pill-btn.icon-only {
+      width: 34px;
+      padding: 0;
     }
 
-    .room-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      min-height: 32px;
-      font-size: 0.74rem;
-      font-weight: 700;
-      padding: 0 11px;
-      border-radius: 999px;
-      background: oklch(0.28 0.14 155 / 0.28);
-      border: 1px solid var(--mint);
+    .online-pill {
+      border-color: oklch(0.55 0.16 156 / 0.65);
       color: var(--mint);
-      cursor: pointer;
     }
 
-    .online-count-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      min-height: 32px;
-      font-size: 0.75rem;
-      font-weight: 700;
-      padding: 0 11px;
-      border-radius: 999px;
-      background: oklch(0.26 0.12 266);
-      border: 1px solid oklch(0.52 0.16 155 / 0.65);
-      color: var(--mint);
-      cursor: pointer;
-    }
-
-    .online-live-dot {
+    .live-dot {
       width: 8px;
       height: 8px;
       border-radius: 50%;
@@ -199,30 +172,32 @@
       flex: none;
     }
 
+    @keyframes pulseDot {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50%      { transform: scale(1.38); opacity: 0.65; }
+    }
+
+    .room-pill {
+      background: oklch(0.28 0.14 156 / 0.25);
+      border-color: var(--mint);
+      color: var(--mint);
+      letter-spacing: 0.04em;
+    }
+
     .profile-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      min-height: 32px;
-      padding: 0 10px 0 6px;
-      border-radius: 999px;
-      border: 1px solid var(--line);
-      background: oklch(0.3 0.11 266);
-      font-size: 0.75rem;
-      font-weight: 700;
-      cursor: pointer;
-      max-width: 135px;
+      padding: 0 11px 0 5px;
+      max-width: 140px;
     }
 
     .profile-pill-avatar {
-      width: 22px;
-      height: 22px;
+      width: 24px;
+      height: 24px;
       border-radius: 50%;
       background: var(--lemon);
       color: var(--ink);
       display: grid;
       place-items: center;
-      font-size: 0.85rem;
+      font-size: 0.88rem;
       flex: none;
     }
 
@@ -232,51 +207,54 @@
       text-overflow: ellipsis;
     }
 
-    .avatar-grid {
-      display: grid;
-      grid-template-columns: repeat(6, 1fr);
-      gap: 8px;
+    .coin-pill {
+      border-color: oklch(0.76 0.17 85 / 0.75);
+      background: oklch(0.26 0.12 85 / 0.35);
+      color: var(--lemon);
+      font-variant-numeric: tabular-nums;
+      cursor: default;
     }
 
-    .avatar-choice {
-      aspect-ratio: 1;
+    /* ==========================================================================
+       Real-Time Incoming Challenge Notification Banner
+       ========================================================================== */
+    .invite-toast {
+      position: absolute;
+      top: calc(54px + env(safe-area-inset-top, 0px));
+      left: 14px;
+      right: 14px;
+      z-index: 70;
+      background: oklch(0.20 0.11 266 / 0.97);
+      backdrop-filter: blur(12px);
+      border: 2px solid var(--lemon);
+      border-radius: 22px;
+      padding: 14px;
+      display: grid;
+      gap: 11px;
+      box-shadow: 0 18px 44px rgba(0, 0, 0, 0.78);
+      animation: toastSlideDown 0.26s cubic-bezier(.22, .85, .32, 1);
+    }
+
+    @keyframes toastSlideDown {
+      from { transform: translateY(-24px); opacity: 0; }
+      to   { transform: translateY(0); opacity: 1; }
+    }
+
+    .invite-toast-top {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+    }
+
+    .invite-avatar {
+      width: 42px;
+      height: 42px;
       border-radius: 14px;
-      border: 2px solid var(--line);
-      background: oklch(0.18 0.08 266);
+      background: var(--lemon);
+      color: var(--ink);
       font-size: 1.35rem;
       display: grid;
       place-items: center;
-      cursor: pointer;
-      transition: transform 0.12s ease, border-color 0.15s ease, background 0.15s ease;
-    }
-
-    .avatar-choice.selected {
-      border-color: var(--lemon);
-      background: oklch(0.36 0.18 265);
-      transform: scale(1.06);
-    }
-
-    .lobby-avatar {
-      width: 34px;
-      height: 34px;
-      border-radius: 11px;
-      background: oklch(0.32 0.14 265);
-      border: 1px solid var(--line);
-      display: grid;
-      place-items: center;
-      font-size: 1.1rem;
-      flex: none;
-    }
-
-    .pz-avatar {
-      width: 28px;
-      height: 28px;
-      border-radius: 9px;
-      background: oklch(0.32 0.14 265);
-      border: 1px solid var(--line);
-      display: grid;
-      place-items: center;
-      font-size: 0.95rem;
       flex: none;
     }
 
@@ -287,7 +265,7 @@
 
     .invite-text b {
       display: block;
-      font-size: 0.9rem;
+      font-size: 0.92rem;
       color: var(--lemon);
       white-space: nowrap;
       overflow: hidden;
@@ -298,124 +276,126 @@
       display: block;
       font-size: 0.78rem;
       color: var(--paper);
+      margin-top: 2px;
     }
 
     .invite-actions {
       display: grid;
-      grid-template-columns: 0.8fr 1.4fr;
+      grid-template-columns: 0.85fr 1.45fr;
       gap: 8px;
     }
 
     .invite-decline-btn {
-      min-height: 38px;
+      min-height: 40px;
       border-radius: 999px;
       border: 1px solid var(--line);
-      background: oklch(0.28 0.1 266);
-      font-size: 0.8rem;
+      background: oklch(0.27 0.10 266);
+      font-size: 0.82rem;
       font-weight: 700;
       color: var(--muted);
       cursor: pointer;
     }
 
     .invite-accept-btn {
-      min-height: 38px;
+      min-height: 40px;
       border-radius: 999px;
       border: 0;
       background: var(--mint);
       color: var(--ink);
-      font-size: 0.82rem;
+      font-size: 0.84rem;
       font-weight: 700;
       cursor: pointer;
-      box-shadow: 0 3px 0 oklch(0.55 0.15 155);
+      box-shadow: 0 3px 0 var(--mint-shadow);
     }
 
     /* ==========================================================================
-       Screen 1: Start Screen + Animated Tutorial (Zero-Scroll Mobile Fit)
+       SCREEN 1: Start Screen + Interactive Tutorial + Mode Cards
        ========================================================================== */
     .start-screen {
       flex: 1 1 auto;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      padding: 4px 16px calc(14px + env(safe-area-inset-bottom, 0px));
-      gap: 8px;
-      overflow: hidden;
+      padding: 4px 16px calc(16px + env(safe-area-inset-bottom, 0px));
+      gap: 10px;
       min-height: 0;
-      background:
-        radial-gradient(circle at 85% 12%, oklch(0.45 0.22 265 / 0.45), transparent 50%),
-        radial-gradient(circle at 15% 88%, oklch(0.93 0.17 100 / 0.12), transparent 50%),
-        var(--cobalt);
-    }
-
-    .start-top-stack {
-      display: grid;
-      gap: 8px;
-    }
-
-    .start-bottom-stack {
-      display: grid;
-      gap: 8px;
-      margin-top: auto;
+      overflow-y: auto;
     }
 
     .hero-block {
       display: flex;
-      align-items: center;
-      justify-content: center;
       flex-direction: column;
+      align-items: center;
+      text-align: center;
       gap: 8px;
       padding: 2px 0;
     }
 
+    .hero-badge-row {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+
     .hero-die-icon {
-      width: 38px;
-      height: 38px;
-      flex: none;
-      border-radius: 11px;
-      background: var(--paper);
+      width: 42px;
+      height: 42px;
+      border-radius: 13px;
+      background: linear-gradient(145deg, var(--paper), oklch(0.88 0.03 270));
       display: grid;
       place-items: center;
-      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35), inset 0 -3px 0 oklch(0.85 0.03 270);
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.4), inset 0 -3px 0 oklch(0.82 0.03 270);
       transform: rotate(-8deg);
     }
 
     .hero-die-icon span {
-      width: 11px;
-      height: 11px;
+      width: 13px;
+      height: 13px;
       border-radius: 50%;
       background: var(--rose);
-      box-shadow: inset 0 2px 3px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 0 8px var(--rose-glow);
     }
 
-    .hero-text {
-      text-align: center;
+    .hero-goal-tag {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 5px 11px;
+      border-radius: 999px;
+      background: oklch(0.22 0.10 266);
+      border: 1px solid var(--lemon);
+      color: var(--lemon);
     }
 
     .hero-block h1 {
-      font: 400 clamp(1.55rem, 5.8vw, 1.9rem)/1 var(--f-display);
-      margin: 0 0 4px;
+      font: 400 clamp(1.7rem, 6.4vw, 2.05rem)/1 var(--f-display);
+      margin: 0;
+      letter-spacing: -0.01em;
     }
 
     .hero-block p {
       margin: 0;
-      font-size: 0.9rem;
-      line-height: 1.25;
+      font-size: 0.88rem;
+      line-height: 1.32;
       color: var(--muted);
+      max-width: 340px;
     }
 
     .hero-block strong {
       color: var(--lemon);
     }
 
-    /* Interactive 6-Step Animated Tutorial Card */
+    /* Interactive 6-Step Tutorial Card */
     .tutorial-card {
-      background: oklch(0.24 0.1 266 / 0.92);
+      background: var(--glass);
+      backdrop-filter: blur(10px);
       border: 1.5px solid var(--line);
-      border-radius: 20px;
-      padding: 10px 12px;
+      border-radius: 22px;
+      padding: 11px 13px;
       display: grid;
-      gap: 8px;
-      box-shadow: 0 10px 26px rgba(0, 0, 0, 0.28);
+      gap: 9px;
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.32);
     }
 
     .tut-top {
@@ -426,7 +406,7 @@
     }
 
     .tut-badge {
-      font-size: 0.7rem;
+      font-size: 0.72rem;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.06em;
@@ -436,17 +416,17 @@
     .tut-controls {
       display: inline-flex;
       align-items: center;
-      gap: 4px;
+      gap: 5px;
     }
 
     .tut-btn {
-      height: 24px;
-      padding: 0 8px;
+      height: 26px;
+      padding: 0 9px;
       border-radius: 999px;
       border: 1px solid var(--line);
-      background: oklch(0.3 0.12 266);
-      font-size: 0.7rem;
-      font-weight: 600;
+      background: oklch(0.29 0.12 266);
+      font-size: 0.72rem;
+      font-weight: 700;
       cursor: pointer;
     }
 
@@ -455,46 +435,46 @@
     }
 
     .tut-stage {
-      background: oklch(0.18 0.08 266);
+      background: var(--cobalt-deep);
       border: 1px solid oklch(0.36 0.12 266);
-      border-radius: 14px;
-      padding: 7px 8px;
+      border-radius: 16px;
+      padding: 8px 9px;
       display: grid;
       grid-template-columns: 1fr auto 1fr;
       align-items: center;
-      gap: 7px;
+      gap: 8px;
       transition: border-color 0.25s ease, background-color 0.25s ease;
     }
 
     .tut-stage.is-bust {
       border-color: var(--rose);
-      background: oklch(0.24 0.14 18 / 0.55);
+      background: oklch(0.23 0.14 18 / 0.55);
       animation: shake 0.38s ease-in-out;
     }
 
     .tut-stage.is-win {
       border-color: var(--lemon);
-      background: oklch(0.28 0.15 265);
+      background: oklch(0.27 0.15 265);
     }
 
     .tut-player {
-      border-radius: 11px;
-      padding: 6px 7px;
+      border-radius: 12px;
+      padding: 7px 8px;
       background: oklch(0.24 0.08 266);
       border: 1.5px solid transparent;
       display: grid;
-      gap: 3px;
+      gap: 4px;
       transition: all 0.3s ease;
     }
 
     .tut-player.active {
       background: oklch(0.34 0.17 265);
       border-color: var(--lemon);
-      box-shadow: 0 0 14px oklch(0.93 0.17 100 / 0.22);
+      box-shadow: 0 0 14px oklch(0.93 0.18 98 / 0.2);
     }
 
     .tut-player.dull {
-      opacity: 0.55;
+      opacity: 0.52;
     }
 
     .tut-p-head {
@@ -507,9 +487,9 @@
 
     .tut-p-tag {
       font-size: 0.58rem;
-      padding: 1px 5px;
+      padding: 1px 6px;
       border-radius: 999px;
-      background: oklch(0.2 0.07 266);
+      background: oklch(0.19 0.07 266);
       color: var(--muted);
     }
 
@@ -519,14 +499,14 @@
     }
 
     .tut-p-score {
-      font-size: 0.98rem;
-      font-weight: 600;
+      font-size: 1.04rem;
+      font-weight: 700;
       font-variant-numeric: tabular-nums;
       line-height: 1.1;
     }
 
     .tut-p-score small {
-      font-size: 0.65rem;
+      font-size: 0.66rem;
       color: var(--muted);
       font-weight: 500;
     }
@@ -534,7 +514,7 @@
     .tut-p-bar {
       height: 4px;
       border-radius: 999px;
-      background: oklch(0.16 0.06 266);
+      background: oklch(0.15 0.06 266);
       overflow: hidden;
     }
 
@@ -557,9 +537,9 @@
       font-size: 0.6rem;
       font-weight: 700;
       text-align: center;
-      padding: 2px;
+      padding: 3px 2px;
       border-radius: 999px;
-      background: oklch(0.2 0.08 266);
+      background: oklch(0.19 0.08 266);
       color: var(--muted);
       border: 1px solid oklch(0.35 0.1 266);
     }
@@ -577,7 +557,7 @@
 
     .tut-mini-btn.trigger {
       animation: tutBtnTap 0.55s cubic-bezier(.22, .7, .3, 1);
-      box-shadow: 0 0 0 3px oklch(0.93 0.17 100 / 0.45);
+      box-shadow: 0 0 0 3px oklch(0.93 0.18 98 / 0.45);
     }
 
     .tut-mini-btn.hold.trigger {
@@ -597,16 +577,16 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 4px;
-      min-width: 68px;
+      gap: 5px;
+      min-width: 72px;
     }
 
     .tut-die {
-      width: 36px;
-      height: 36px;
-      border-radius: 9px;
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
       background: var(--paper);
-      box-shadow: 0 5px 12px rgba(0, 0, 0, 0.4), inset 0 -3px 0 oklch(0.85 0.03 270);
+      box-shadow: 0 5px 12px rgba(0, 0, 0, 0.42), inset 0 -3px 0 oklch(0.85 0.03 270);
       display: grid;
       grid-template: repeat(3, 1fr) / repeat(3, 1fr);
       padding: 5px;
@@ -623,8 +603,8 @@
     }
 
     .tut-die .tp {
-      width: 6px;
-      height: 6px;
+      width: 6.5px;
+      height: 6.5px;
       border-radius: 50%;
       background: var(--ink);
       place-self: center;
@@ -642,14 +622,14 @@
 
     .tut-die[data-val="1"] .tp5 {
       background: var(--rose);
-      width: 9px;
-      height: 9px;
+      width: 9.5px;
+      height: 9.5px;
     }
 
     .tut-bank-chip {
-      font-size: 0.64rem;
+      font-size: 0.65rem;
       font-weight: 700;
-      padding: 2px 6px;
+      padding: 2px 7px;
       border-radius: 999px;
       background: oklch(0.28 0.13 266);
       border: 1px solid oklch(0.5 0.15 266);
@@ -674,8 +654,8 @@
 
     .tut-caption {
       margin: 0;
-      font-size: 0.74rem;
-      line-height: 1.35;
+      font-size: 0.76rem;
+      line-height: 1.38;
       color: var(--muted);
     }
 
@@ -713,26 +693,28 @@
     /* Mode Selection Cards */
     .mode-cards {
       display: grid;
-      gap: 8px;
+      gap: 9px;
+      margin-top: auto;
     }
 
     .mode-card {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 13px;
       width: 100%;
-      padding: 10px 14px;
-      border-radius: 18px;
+      padding: 12px 15px;
+      border-radius: 20px;
       border: 2px solid var(--line);
-      background: oklch(0.28 0.12 266);
+      background: oklch(0.26 0.11 266);
       text-align: left;
       cursor: pointer;
-      transition: transform 0.12s ease, border-color 0.2s ease, background 0.2s ease;
+      transition: transform 0.12s ease, border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
     }
 
     .mode-card:hover, .mode-card.selected {
       border-color: var(--lemon);
-      background: oklch(0.35 0.17 265);
+      background: oklch(0.34 0.17 265);
+      box-shadow: 0 8px 22px rgba(0, 0, 0, 0.28);
     }
 
     .mode-card:active {
@@ -740,10 +722,10 @@
     }
 
     .mode-icon {
-      flex: 0 0 40px;
-      height: 40px;
-      border-radius: 12px;
-      background: oklch(0.42 0.19 265);
+      flex: 0 0 42px;
+      height: 42px;
+      border-radius: 13px;
+      background: oklch(0.41 0.19 265);
       color: var(--lemon);
       display: grid;
       place-items: center;
@@ -766,29 +748,36 @@
 
     .mode-info b {
       display: block;
-      font-size: 0.98rem;
+      font-size: 1rem;
       font-weight: 700;
-      margin-bottom: 1px;
+      margin-bottom: 2px;
     }
 
     .mode-info span {
       display: block;
-      font-size: 0.76rem;
+      font-size: 0.77rem;
       color: var(--muted);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
 
+    .mode-chevron {
+      color: var(--lemon);
+      font-weight: 700;
+      font-size: 1.1rem;
+      opacity: 0.8;
+    }
+
     /* ==========================================================================
-       Bottom Pull-Out Sheet Modal (Online Lobby / Room & Friend Setup)
+       Bottom Pull-Out Sheets (Online Lobby, Profile, Pass & Play)
        ========================================================================== */
     .sheet-backdrop {
       position: fixed;
       inset: 0;
       z-index: 65;
-      background: oklch(0.11 0.06 266 / 0.78);
-      backdrop-filter: blur(5px);
+      background: oklch(0.10 0.06 266 / 0.80);
+      backdrop-filter: blur(6px);
       display: flex;
       flex-direction: column;
       justify-content: flex-end;
@@ -799,15 +788,15 @@
     .bottom-sheet {
       width: 100%;
       max-width: 480px;
-      background: oklch(0.22 0.1 266);
-      border-top: 2px solid var(--lemon);
+      background: oklch(0.21 0.10 266);
+      border-top: 2.5px solid var(--lemon);
       border-left: 1.5px solid var(--line);
       border-right: 1.5px solid var(--line);
-      border-radius: 28px 28px 0 0;
-      padding: 10px 18px calc(22px + env(safe-area-inset-bottom, 0px));
+      border-radius: 30px 30px 0 0;
+      padding: 10px 18px calc(24px + env(safe-area-inset-bottom, 0px));
       display: grid;
-      gap: 12px;
-      box-shadow: 0 -16px 48px rgba(0, 0, 0, 0.75);
+      gap: 13px;
+      box-shadow: 0 -18px 50px rgba(0, 0, 0, 0.78);
       animation: sheetPullUp 0.26s cubic-bezier(.22, .85, .32, 1);
       touch-action: pan-y;
     }
@@ -836,21 +825,58 @@
     .sheet-header h3 {
       margin: 0;
       font-family: var(--f-display);
-      font-size: 1.02rem;
+      font-size: 1.04rem;
       color: var(--lemon);
+    }
+
+    .modal-close-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 1px solid var(--line);
+      background: oklch(0.29 0.12 266);
+      font-weight: 700;
+      font-size: 0.9rem;
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+    }
+
+    .avatar-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 8px;
+    }
+
+    .avatar-choice {
+      aspect-ratio: 1;
+      border-radius: 14px;
+      border: 2px solid var(--line);
+      background: oklch(0.17 0.08 266);
+      font-size: 1.38rem;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      transition: transform 0.12s ease, border-color 0.15s ease, background 0.15s ease;
+    }
+
+    .avatar-choice.selected {
+      border-color: var(--lemon);
+      background: oklch(0.36 0.18 265);
+      transform: scale(1.06);
     }
 
     .online-tabs {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 6px;
-      background: oklch(0.17 0.07 266);
+      background: oklch(0.16 0.07 266);
       padding: 4px;
       border-radius: 999px;
     }
 
     .online-tab {
-      padding: 7px 10px;
+      padding: 8px 10px;
       border-radius: 999px;
       border: 0;
       background: transparent;
@@ -865,12 +891,11 @@
       color: var(--ink);
     }
 
-    /* Online Players Lobby List inside Pull-Out Sheet */
     .lobby-list {
-      max-height: 170px;
+      max-height: 175px;
       overflow-y: auto;
       display: grid;
-      gap: 7px;
+      gap: 8px;
       padding-right: 2px;
     }
 
@@ -879,17 +904,29 @@
       align-items: center;
       justify-content: space-between;
       gap: 10px;
-      padding: 8px 11px;
-      border-radius: 14px;
-      background: oklch(0.18 0.08 266);
+      padding: 9px 12px;
+      border-radius: 15px;
+      background: oklch(0.17 0.08 266);
       border: 1px solid oklch(0.38 0.12 266);
     }
 
     .lobby-user {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 9px;
       min-width: 0;
+    }
+
+    .lobby-avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 11px;
+      background: oklch(0.32 0.14 265);
+      border: 1px solid var(--line);
+      display: grid;
+      place-items: center;
+      font-size: 1.12rem;
+      flex: none;
     }
 
     .lobby-user b {
@@ -899,13 +936,75 @@
       text-overflow: ellipsis;
     }
 
+    .lobby-user-meta {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .lobby-user-coins {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--lemon);
+    }
+
+    .stage-pill-bar {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+    }
+
+    .stage-chip-btn {
+      padding: 7px 4px;
+      border-radius: 13px;
+      border: 1.5px solid var(--line);
+      background: oklch(0.17 0.08 266);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      cursor: pointer;
+      transition: border-color 0.15s ease, background 0.15s ease, transform 0.1s ease;
+    }
+
+    .stage-chip-btn.active {
+      border-color: var(--lemon);
+      background: oklch(0.34 0.17 265);
+    }
+
+    .stage-chip-btn:active {
+      transform: scale(0.95);
+    }
+
+    .stage-chip-btn b {
+      font-size: 0.7rem;
+      color: var(--paper);
+    }
+
+    .stage-chip-btn span {
+      font-size: 0.64rem;
+      font-weight: 700;
+      color: var(--lemon);
+    }
+
+    .coin-reward-banner {
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: oklch(0.32 0.16 85 / 0.45);
+      border: 1.5px solid var(--lemon);
+      color: var(--lemon);
+      font-size: 0.84rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
     .challenge-btn {
-      padding: 6px 12px;
+      padding: 7px 14px;
       border-radius: 999px;
       border: 0;
       background: var(--lemon);
       color: var(--ink);
-      font-size: 0.75rem;
+      font-size: 0.76rem;
       font-weight: 700;
       cursor: pointer;
       flex: none;
@@ -918,14 +1017,14 @@
 
     .lobby-empty {
       margin: 0;
-      padding: 14px 10px;
-      border-radius: 14px;
-      background: oklch(0.18 0.08 266);
+      padding: 14px 12px;
+      border-radius: 15px;
+      background: oklch(0.17 0.08 266);
       border: 1px dashed var(--line);
       font-size: 0.78rem;
       color: var(--muted);
       text-align: center;
-      line-height: 1.4;
+      line-height: 1.45;
     }
 
     .room-code-box {
@@ -933,26 +1032,26 @@
       align-items: center;
       justify-content: space-between;
       gap: 8px;
-      padding: 10px 12px;
-      border-radius: 14px;
-      background: oklch(0.18 0.08 266);
+      padding: 11px 14px;
+      border-radius: 15px;
+      background: oklch(0.17 0.08 266);
       border: 1.5px dashed var(--lemon);
     }
 
     .room-code-val {
       font-family: var(--f-display);
-      font-size: 1.35rem;
+      font-size: 1.4rem;
       letter-spacing: 0.14em;
       color: var(--lemon);
     }
 
     .copy-code-btn {
-      padding: 7px 12px;
+      padding: 8px 13px;
       border-radius: 999px;
       border: 1px solid var(--lemon);
-      background: oklch(0.3 0.14 266);
+      background: oklch(0.30 0.14 266);
       color: var(--lemon);
-      font-size: 0.76rem;
+      font-size: 0.78rem;
       font-weight: 700;
       cursor: pointer;
     }
@@ -973,11 +1072,6 @@
       font-weight: 600;
     }
 
-    @keyframes slideUp {
-      from { opacity: 0; transform: translateY(10px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
     .input-row {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -986,7 +1080,7 @@
 
     .field {
       display: grid;
-      gap: 4px;
+      gap: 5px;
     }
 
     .field label {
@@ -999,13 +1093,13 @@
 
     .field input {
       width: 100%;
-      min-height: 42px;
-      padding: 7px 11px;
-      border-radius: 12px;
+      min-height: 44px;
+      padding: 8px 12px;
+      border-radius: 13px;
       border: 2px solid var(--line);
-      background: oklch(0.2 0.08 266);
+      background: oklch(0.18 0.08 266);
       font-weight: 600;
-      font-size: 0.92rem;
+      font-size: 0.94rem;
     }
 
     .field input:focus {
@@ -1013,8 +1107,8 @@
       border-color: var(--lemon);
     }
 
-    .start-match-btn {
-      min-height: 48px;
+    .primary-cta-btn {
+      min-height: 50px;
       width: 100%;
       border-radius: 999px;
       border: 0;
@@ -1027,7 +1121,7 @@
       transition: transform 0.1s ease, box-shadow 0.1s ease;
     }
 
-    .start-match-btn:active {
+    .primary-cta-btn:active {
       transform: translateY(4px);
       box-shadow: 0 1px 0 var(--lemon-shadow);
     }
@@ -1039,7 +1133,7 @@
       position: fixed;
       inset: 0;
       z-index: 60;
-      background: oklch(0.12 0.06 266 / 0.78);
+      background: oklch(0.10 0.06 266 / 0.80);
       backdrop-filter: blur(6px);
       display: grid;
       place-items: center;
@@ -1050,41 +1144,19 @@
     .settings-modal {
       width: 100%;
       max-width: 340px;
-      background: oklch(0.23 0.1 266);
+      background: oklch(0.22 0.10 266);
       border: 2px solid var(--lemon);
-      border-radius: 24px;
+      border-radius: 26px;
       padding: 18px;
       display: grid;
       gap: 14px;
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.65);
+      box-shadow: 0 22px 54px rgba(0, 0, 0, 0.7);
       animation: slideUp 0.2s ease-out;
     }
 
-    .settings-modal-head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-    }
-
-    .settings-modal-head h3 {
-      margin: 0;
-      font-family: var(--f-display);
-      font-size: 1.05rem;
-      color: var(--lemon);
-    }
-
-    .modal-close-btn {
-      width: 30px;
-      height: 30px;
-      border-radius: 50%;
-      border: 1px solid var(--line);
-      background: oklch(0.3 0.12 266);
-      font-weight: 700;
-      font-size: 0.9rem;
-      cursor: pointer;
-      display: grid;
-      place-items: center;
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
 
     .set-row {
@@ -1092,7 +1164,7 @@
       align-items: center;
       justify-content: space-between;
       gap: 10px;
-      font-size: 0.84rem;
+      font-size: 0.85rem;
       font-weight: 600;
     }
 
@@ -1107,12 +1179,12 @@
     }
 
     .switch-btn {
-      min-width: 56px;
-      height: 28px;
+      min-width: 58px;
+      height: 30px;
       border-radius: 999px;
       border: 1px solid var(--line);
-      background: oklch(0.3 0.12 266);
-      font-size: 0.74rem;
+      background: oklch(0.29 0.12 266);
+      font-size: 0.75rem;
       font-weight: 700;
       cursor: pointer;
     }
@@ -1124,27 +1196,27 @@
     }
 
     /* ==========================================================================
-       Screen 2: Vertically Divided 2-Player Split Arena
+       SCREEN 2: Vertically Divided 2-Player Split Arena
        ========================================================================== */
     .arena {
       flex: 1 1 auto;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      gap: 6px;
-      padding: 6px 12px calc(6px + env(safe-area-inset-bottom, 0px));
+      gap: 8px;
+      padding: 6px 12px calc(10px + env(safe-area-inset-bottom, 0px));
       min-height: 0;
     }
 
     .player-zone {
-      flex: 1 1 36%;
+      flex: 1 1 35%;
       position: relative;
-      border-radius: 24px;
-      padding: 14px 16px;
+      border-radius: 26px;
+      padding: 13px 15px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      gap: 10px;
+      gap: 9px;
       transition:
         background-color 0.3s ease,
         border-color 0.3s ease,
@@ -1157,14 +1229,14 @@
     }
 
     .player-zone.active {
-      background: linear-gradient(160deg, oklch(0.41 0.21 265), oklch(0.32 0.17 266));
+      background: linear-gradient(160deg, oklch(0.40 0.21 265), oklch(0.30 0.17 266));
       border: 2px solid var(--lemon);
-      box-shadow: 0 0 24px oklch(0.93 0.17 100 / 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.16);
+      box-shadow: 0 0 26px oklch(0.93 0.18 98 / 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.18);
       z-index: 2;
     }
 
     .player-zone.dull {
-      background: oklch(0.26 0.09 266);
+      background: oklch(0.24 0.09 266);
       border: 1.5px solid var(--line);
       z-index: 1;
     }
@@ -1201,27 +1273,34 @@
       animation: pulseDot 1.4s infinite ease-in-out;
     }
 
-    @keyframes pulseDot {
-      0%, 100% { transform: scale(1); opacity: 1; }
-      50%      { transform: scale(1.35); opacity: 0.7; }
+    .pz-avatar {
+      width: 30px;
+      height: 30px;
+      border-radius: 10px;
+      background: oklch(0.31 0.14 265);
+      border: 1px solid var(--line);
+      display: grid;
+      place-items: center;
+      font-size: 1rem;
+      flex: none;
     }
 
     .pz-name {
       font-weight: 700;
-      font-size: 1.08rem;
+      font-size: 1.06rem;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
 
     .pz-badge {
-      font-size: 0.72rem;
+      font-size: 0.70rem;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.06em;
       padding: 3px 10px;
       border-radius: 999px;
-      background: oklch(0.22 0.08 266);
+      background: oklch(0.20 0.08 266);
       color: var(--muted);
       flex: none;
     }
@@ -1244,17 +1323,17 @@
       justify-content: center;
       padding: 8px 12px;
       border-radius: 16px;
-      background: oklch(0.2 0.08 266 / 0.85);
-      border: 1px solid oklch(0.42 0.12 266);
+      background: oklch(0.19 0.08 266 / 0.86);
+      border: 1px solid oklch(0.41 0.12 266);
     }
 
     .player-zone.active .pz-stat-box.bank-box {
       border-color: var(--lemon);
-      background: oklch(0.23 0.12 266);
+      background: oklch(0.22 0.12 266);
     }
 
     .pz-stat-label {
-      font-size: 0.68rem;
+      font-size: 0.67rem;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.05em;
@@ -1271,7 +1350,7 @@
     .pz-score {
       font-family: var(--f-body);
       font-weight: 700;
-      font-size: clamp(2.15rem, 8.5vw, 2.75rem);
+      font-size: clamp(2.1rem, 8.2vw, 2.7rem);
       line-height: 0.95;
       letter-spacing: -0.03em;
       color: var(--paper);
@@ -1279,7 +1358,7 @@
     }
 
     .pz-goal {
-      font-size: 0.86rem;
+      font-size: 0.85rem;
       font-weight: 600;
       color: var(--muted);
     }
@@ -1295,7 +1374,7 @@
 
     .pz-track {
       height: 8px;
-      background: oklch(0.19 0.08 266);
+      background: oklch(0.18 0.08 266);
       border-radius: 999px;
       overflow: hidden;
     }
@@ -1314,16 +1393,12 @@
       gap: 10px;
     }
 
-    .pz-actions[hidden] {
-      display: none !important;
-    }
-
     .act-btn {
-      min-height: 52px;
+      min-height: 50px;
       padding: 10px 16px;
       border-radius: 999px;
       font-weight: 700;
-      font-size: 1.04rem;
+      font-size: 1.02rem;
       cursor: pointer;
       border: 0;
       display: inline-flex;
@@ -1345,7 +1420,7 @@
     }
 
     .act-btn.hold {
-      background: oklch(0.26 0.11 266);
+      background: oklch(0.25 0.11 266);
       color: var(--paper);
       border: 1.5px solid var(--paper);
     }
@@ -1362,18 +1437,18 @@
     }
 
     /* ==========================================================================
-       Compact Central 3D Dice Tray
+       Central 3D Dice Tray
        ========================================================================== */
     .center-tray {
-      flex: 0 0 clamp(20dvh, 22dvh, 25dvh);
-      min-height: 20dvh;
+      flex: 0 0 clamp(21dvh, 23dvh, 26dvh);
+      min-height: 21dvh;
       position: relative;
       background:
-        radial-gradient(circle at center, oklch(0.28 0.12 266 / 0.6), transparent 72%),
+        radial-gradient(circle at center, oklch(0.28 0.12 266 / 0.65), transparent 72%),
         var(--tray-bg);
-      border-radius: 24px;
-      border: 2px solid oklch(0.4 0.15 266);
-      box-shadow: inset 0 8px 24px rgba(0, 0, 0, 0.45);
+      border-radius: 26px;
+      border: 2px solid oklch(0.40 0.15 266);
+      box-shadow: inset 0 10px 26px rgba(0, 0, 0, 0.5);
       display: grid;
       place-items: center;
       overflow: hidden;
@@ -1398,15 +1473,15 @@
 
     .status-banner {
       position: absolute;
-      bottom: 7px;
+      bottom: 8px;
       left: 12px;
       right: 12px;
       text-align: center;
-      font-size: 0.74rem;
+      font-size: 0.75rem;
       font-weight: 600;
       color: var(--paper);
-      background: oklch(0.16 0.07 266 / 0.86);
-      padding: 4px 10px;
+      background: oklch(0.15 0.07 266 / 0.88);
+      padding: 5px 12px;
       border-radius: 999px;
       z-index: 3;
       white-space: nowrap;
@@ -1415,7 +1490,7 @@
     }
 
     .status-banner.bust-text {
-      background: oklch(0.45 0.22 18 / 0.92);
+      background: oklch(0.45 0.22 18 / 0.94);
       color: #fff;
     }
 
@@ -1427,7 +1502,7 @@
       margin-bottom: 22px;
       perspective: 750px;
       transform: translate(var(--dx), var(--dy)) rotate(var(--rz));
-      filter: drop-shadow(0 12px 10px rgba(0, 0, 0, 0.55));
+      filter: drop-shadow(0 14px 12px rgba(0, 0, 0, 0.58));
       cursor: pointer;
     }
 
@@ -1520,7 +1595,7 @@
     .f1 .p5 {
       background: var(--rose);
       width: 100%;
-      box-shadow: 0 0 8px oklch(0.63 0.25 18 / 0.45), inset 0 2px 3px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 0 8px var(--rose-glow), inset 0 2px 3px rgba(0, 0, 0, 0.3);
     }
 
     .center-tray.bust {
@@ -1528,11 +1603,346 @@
       border-color: var(--rose);
     }
 
-    @keyframes shake {
-      20% { transform: translateX(-8px); }
-      40% { transform: translateX(8px); }
-      60% { transform: translateX(-5px); }
-      80% { transform: translateX(5px); }
+    .center-tray.sugar-rush {
+      border-color: var(--lemon);
+      box-shadow:
+        inset 0 0 28px oklch(0.93 0.18 98 / 0.35),
+        0 0 24px oklch(0.93 0.18 98 / 0.4);
+    }
+
+    .center-tray.micro-shake {
+      animation: microShake 0.38s ease-in-out;
+    }
+
+    @keyframes microShake {
+      0%, 100% { transform: translate(0, 0); }
+      25% { transform: translate(-4px, 2px); }
+      50% { transform: translate(4px, -2px); }
+      75% { transform: translate(-3px, -1px); }
+    }
+
+    /* Dual Dice Container for Stage 3: Double Trouble Arena */
+    .dice-stage-row {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      margin-bottom: 22px;
+    }
+
+    .center-tray.dual-mode .dice-stage-row {
+      --die: clamp(54px, 13.5vw, 66px);
+    }
+
+    .center-tray.dual-mode .die-wrap {
+      margin-bottom: 0;
+    }
+
+    .center-tray:not(.dual-mode) .die-wrap {
+      margin-bottom: 0;
+    }
+
+    /* Candy Crush Combo Sticker Overlay */
+    .combo-sticker {
+      position: absolute;
+      inset: 0;
+      z-index: 9;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      text-align: center;
+      padding: 8px;
+    }
+
+    .combo-sticker-pill {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      padding: 8px 18px;
+      border-radius: 22px;
+      background: linear-gradient(145deg, oklch(0.95 0.17 98), oklch(0.84 0.19 72));
+      color: var(--ink);
+      border: 2.5px solid #fff;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.65), 0 0 24px oklch(0.93 0.18 98 / 0.7);
+      animation: stickerPop 1.65s cubic-bezier(.2, .85, .3, 1) forwards;
+    }
+
+    .combo-sticker-pill.tier-tasty {
+      background: linear-gradient(145deg, oklch(0.84 0.21 48), oklch(0.68 0.24 25));
+      color: #fff;
+    }
+
+    .combo-sticker-pill.tier-divine {
+      background: linear-gradient(145deg, oklch(0.94 0.19 95), oklch(0.75 0.22 315));
+      color: #fff;
+      box-shadow: 0 14px 36px rgba(0, 0, 0, 0.75), 0 0 34px oklch(0.88 0.2 95 / 0.9);
+    }
+
+    .combo-sticker-pill.tier-rush {
+      background: linear-gradient(145deg, oklch(0.92 0.19 145), oklch(0.82 0.18 98));
+      color: var(--ink);
+    }
+
+    .combo-sticker-pill.tier-shield {
+      background: linear-gradient(145deg, oklch(0.82 0.16 215), oklch(0.65 0.19 245));
+      color: #fff;
+    }
+
+    .combo-emoji {
+      font-size: 1.75rem;
+      line-height: 1;
+      animation: emojiBounce 0.5s ease infinite alternate;
+    }
+
+    .combo-title {
+      font-family: var(--f-display);
+      font-size: clamp(1rem, 4.2vw, 1.28rem);
+      letter-spacing: 0.02em;
+      line-height: 1.05;
+      text-shadow: 0 2px 0 rgba(0, 0, 0, 0.2);
+    }
+
+    .combo-sub {
+      font-size: 0.7rem;
+      font-weight: 700;
+      opacity: 0.92;
+    }
+
+    @keyframes stickerPop {
+      0%   { transform: scale(0.3) rotate(-10deg); opacity: 0; }
+      16%  { transform: scale(1.14) rotate(3deg); opacity: 1; }
+      28%  { transform: scale(0.96) rotate(-1deg); opacity: 1; }
+      40%  { transform: scale(1) rotate(0deg); opacity: 1; }
+      82%  { transform: scale(1) translateY(0); opacity: 1; }
+      100% { transform: scale(0.85) translateY(-18px); opacity: 0; }
+    }
+
+    @keyframes emojiBounce {
+      from { transform: translateY(0) scale(1); }
+      to   { transform: translateY(-4px) scale(1.12); }
+    }
+
+    /* Sweet Shield Pill & Shot Clock Timer Pill */
+    .pz-badges-right {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      flex: none;
+    }
+
+    .shield-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      background: oklch(0.34 0.16 225);
+      border: 1px solid oklch(0.74 0.16 215);
+      color: oklch(0.92 0.08 215);
+      transition: opacity 0.25s ease, transform 0.25s ease;
+    }
+
+    .shield-pill.spent {
+      opacity: 0.32;
+      text-decoration: line-through;
+      filter: grayscale(1);
+    }
+
+    .shield-pill.shatter {
+      animation: shieldShatter 0.65s ease-out;
+    }
+
+    @keyframes shieldShatter {
+      0%   { transform: scale(1); background: var(--lemon); color: var(--ink); }
+      40%  { transform: scale(1.35) rotate(-12deg); }
+      100% { transform: scale(0.9); opacity: 0.32; }
+    }
+
+    .shot-clock-pill {
+      position: absolute;
+      top: 8px;
+      right: 10px;
+      z-index: 4;
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: oklch(0.20 0.10 266 / 0.92);
+      border: 1.5px solid var(--lemon);
+      color: var(--lemon);
+      font-size: 0.74rem;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .shot-clock-pill.urgent {
+      border-color: var(--rose);
+      background: oklch(0.42 0.22 18 / 0.92);
+      color: #fff;
+      animation: pulseDot 0.6s infinite;
+    }
+
+    .stage-pill-tag {
+      position: absolute;
+      top: 8px;
+      left: 10px;
+      z-index: 4;
+      padding: 3px 9px;
+      border-radius: 999px;
+      background: oklch(0.20 0.10 266 / 0.88);
+      border: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 0.66rem;
+      font-weight: 700;
+      max-width: 62%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Live Online Emoji Reaction Bar & Floating Reaction Bubble */
+    .reaction-bar {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 6;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .react-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 1px solid var(--line);
+      background: oklch(0.22 0.10 266 / 0.9);
+      font-size: 0.95rem;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      transition: transform 0.1s ease, border-color 0.15s ease;
+    }
+
+    .react-btn:active {
+      transform: scale(1.22);
+      border-color: var(--lemon);
+    }
+
+    .floating-reaction {
+      position: absolute;
+      left: 18px;
+      bottom: 42px;
+      z-index: 11;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 11px;
+      border-radius: 999px;
+      background: oklch(0.22 0.12 266 / 0.95);
+      border: 1.5px solid var(--lemon);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+      pointer-events: none;
+      animation: floatReactUp 1.8s cubic-bezier(.2, .8, .3, 1) forwards;
+    }
+
+    .floating-reaction b {
+      font-size: 1.25rem;
+    }
+
+    .floating-reaction span {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--lemon);
+    }
+
+    @keyframes floatReactUp {
+      0%   { transform: translateY(14px) scale(0.6); opacity: 0; }
+      18%  { transform: translateY(0) scale(1.08); opacity: 1; }
+      80%  { transform: translateY(-34px) scale(1); opacity: 1; }
+      100% { transform: translateY(-54px) scale(0.9); opacity: 0; }
+    }
+
+    /* Saga Stage Cards inside Pull-Out Sheet */
+    .stage-grid {
+      display: grid;
+      gap: 8px;
+      max-height: 54dvh;
+      overflow-y: auto;
+    }
+
+    .stage-card {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding: 11px 13px;
+      border-radius: 17px;
+      border: 1.5px solid var(--line);
+      background: oklch(0.18 0.08 266);
+      text-align: left;
+      cursor: pointer;
+      transition: border-color 0.18s ease, background 0.18s ease, transform 0.1s ease;
+    }
+
+    .stage-card:hover, .stage-card.active-stage {
+      border-color: var(--lemon);
+      background: oklch(0.30 0.15 265);
+    }
+
+    .stage-card:active {
+      transform: scale(0.98);
+    }
+
+    .stage-badge-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      background: oklch(0.28 0.13 266);
+      border: 1px solid var(--line);
+      display: grid;
+      place-items: center;
+      font-size: 1.25rem;
+      flex: none;
+    }
+
+    .stage-meta {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+
+    .stage-meta-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+    }
+
+    .stage-meta b {
+      font-size: 0.9rem;
+      color: var(--paper);
+    }
+
+    .stage-goal-pill {
+      font-size: 0.66rem;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 999px;
+      background: var(--lemon);
+      color: var(--ink);
+      flex: none;
+    }
+
+    .stage-meta p {
+      margin: 2px 0 0;
+      font-size: 0.74rem;
+      color: var(--muted);
+      line-height: 1.3;
     }
 
     /* ==========================================================================
@@ -1542,15 +1952,15 @@
       position: absolute;
       inset: 0;
       z-index: 20;
-      background: oklch(0.18 0.11 266 / 0.94);
-      backdrop-filter: blur(8px);
+      background: oklch(0.16 0.11 266 / 0.95);
+      backdrop-filter: blur(10px);
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       text-align: center;
       padding: 24px 20px;
-      gap: 14px;
+      gap: 15px;
       animation: fadeIn 0.3s ease;
     }
 
@@ -1560,29 +1970,29 @@
     }
 
     .trophy-badge {
-      width: 68px;
-      height: 68px;
-      border-radius: 22px;
+      width: 72px;
+      height: 72px;
+      border-radius: 24px;
       background: var(--lemon);
       color: var(--ink);
       display: grid;
       place-items: center;
-      box-shadow: 0 12px 30px oklch(0.93 0.17 100 / 0.35);
+      box-shadow: 0 12px 32px oklch(0.93 0.18 98 / 0.38);
     }
 
     .trophy-badge.lose-badge {
-      background: oklch(0.32 0.12 266);
+      background: oklch(0.30 0.12 266);
       color: var(--rose);
-      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
     }
 
     .trophy-badge svg {
-      width: 36px;
-      height: 36px;
+      width: 38px;
+      height: 38px;
     }
 
     .victory-overlay h2 {
-      font: 400 clamp(1.9rem, 7.5vw, 2.6rem)/1.02 var(--f-display);
+      font: 400 clamp(1.95rem, 7.5vw, 2.65rem)/1.02 var(--f-display);
       margin: 2px 0 0;
       color: var(--paper);
     }
@@ -1590,12 +2000,12 @@
     .tug-arena {
       width: 100%;
       max-width: 360px;
-      background: oklch(0.24 0.1 266);
+      background: oklch(0.23 0.10 266);
       border: 1.5px solid var(--line);
-      border-radius: 22px;
-      padding: 14px;
+      border-radius: 24px;
+      padding: 15px;
       display: grid;
-      gap: 12px;
+      gap: 13px;
     }
 
     .tug-fighters {
@@ -1606,10 +2016,10 @@
     }
 
     .v-card {
-      background: oklch(0.28 0.11 266);
+      background: oklch(0.27 0.11 266);
       border: 1.5px solid var(--line);
-      border-radius: 16px;
-      padding: 10px 8px;
+      border-radius: 17px;
+      padding: 11px 8px;
       transition: transform 0.3s ease;
     }
 
@@ -1633,7 +2043,7 @@
       display: block;
       font-family: var(--f-body);
       font-weight: 700;
-      font-size: 1.9rem;
+      font-size: 1.95rem;
       margin-top: 2px;
       color: var(--paper);
       font-variant-numeric: tabular-nums;
@@ -1647,7 +2057,7 @@
       font-family: var(--f-display);
       font-size: 0.85rem;
       color: var(--lemon);
-      background: oklch(0.2 0.08 266);
+      background: oklch(0.19 0.08 266);
       padding: 6px 8px;
       border-radius: 999px;
       border: 1px solid var(--line);
@@ -1655,14 +2065,14 @@
 
     .tug-rope-box {
       display: grid;
-      gap: 5px;
+      gap: 6px;
     }
 
     .tug-rope-track {
       position: relative;
       height: 14px;
       border-radius: 999px;
-      background: oklch(0.18 0.07 266);
+      background: oklch(0.17 0.07 266);
       border: 1px solid var(--line);
       display: flex;
       align-items: center;
@@ -1691,7 +2101,7 @@
       border-radius: 50%;
       background: var(--rose);
       border: 2.5px solid var(--paper);
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.55);
       transform: translate(-50%, -50%);
       transition: left 0.7s cubic-bezier(.22, .8, .3, 1);
     }
@@ -1699,7 +2109,7 @@
     .tug-labels {
       display: flex;
       justify-content: space-between;
-      font-size: 0.7rem;
+      font-size: 0.72rem;
       font-weight: 600;
       color: var(--muted);
     }
@@ -1775,36 +2185,29 @@
 <body>
   <style id="roll-rules"></style>
 
-  <!-- Declared MP3 Audio Assets (With Web Audio API Synthesis Fallback) -->
-  <div id="audioAssets" hidden aria-hidden="true">
-    <audio id="bgmPlayer" preload="auto"></audio>
-    <audio id="sfxCheers" src="cheers-crowd.mp3" preload="auto"></audio>
-    <audio id="sfxOops" src="you-lost.mp3" preload="auto"></audio>
-  </div>
-
   <div class="phone-shell">
-    <!-- Top Utility Header (Always Accessible) -->
+    <!-- Top Utility Header -->
     <header class="topbar">
       <div class="topbar-left">
-        <button class="online-count-pill" id="onlineCountBtn" type="button" title="View active online players">
-          <span class="online-live-dot" aria-hidden="true"></span>
+        <button class="pill-btn online-pill" id="onlineCountBtn" type="button" title="View active online players">
+          <span class="live-dot" aria-hidden="true"></span>
           <span id="onlineCountText">1 Online</span>
         </button>
-        <button class="room-pill" id="roomBadgeBtn" type="button" title="Tap to copy Room Code" hidden>ROOM: -----</button>
+        <div class="pill-btn coin-pill" id="coinBalancePill" title="Your Coin Wallet (Win matches to earn +50 coins!)">
+          <span>🪙</span>
+          <span id="coinBalanceText">100</span>
+        </div>
+        <button class="pill-btn room-pill" id="roomBadgeBtn" type="button" title="Tap to copy Room Code" hidden>ROOM: -----</button>
       </div>
+
       <div class="top-actions">
-        <button class="profile-pill" id="profilePillBtn" type="button" title="Edit your Name & Avatar">
+        <button class="pill-btn profile-pill" id="profilePillBtn" type="button" title="Edit your Name & Avatar">
           <span class="profile-pill-avatar" id="topAvatar">🎲</span>
           <span class="profile-pill-name" id="topProfileName">Player</span>
         </button>
-        <button class="icon-btn" id="flipBtn" type="button" title="Flip Player 2 panel for face-to-face tabletop play" hidden>
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10l5-6 5 6H7zm10 4l-5 6-5-6h10z"/></svg>
-          <span>Flip P2</span>
-        </button>
-        <button class="icon-btn" id="changeModeBtn" type="button" hidden>Home</button>
-        <button class="icon-btn" id="settingsBtn" type="button" title="Audio & Music Settings" aria-haspopup="dialog" aria-controls="settingsModalBackdrop">
-          <span aria-hidden="true">⚙️</span>
-        </button>
+        <button class="pill-btn" id="flipBtn" type="button" title="Flip Player 2 panel for tabletop face-to-face play" hidden>Flip P2</button>
+        <button class="pill-btn" id="changeModeBtn" type="button" hidden>Home</button>
+        <button class="pill-btn icon-only" id="settingsBtn" type="button" title="Audio & Music Settings" aria-haspopup="dialog" aria-controls="settingsModalBackdrop">⚙️</button>
       </div>
     </header>
 
@@ -1813,13 +2216,13 @@
       <div class="invite-toast-top">
         <div class="invite-avatar" id="inviteSenderAvatar" aria-hidden="true">🎲</div>
         <div class="invite-text">
-          <b id="inviteSenderTitle">Someone is trying to play with you online!</b>
-          <span id="inviteSenderSub">Tap Accept &amp; Play Game to start immediately</span>
+          <b id="inviteSenderTitle">Someone is challenging you online!</b>
+          <span id="inviteSenderSub">Stage 1 • Entry: 10 🪙 • Win: +50 🪙</span>
         </div>
       </div>
       <div class="invite-actions">
         <button class="invite-decline-btn" id="declineInviteBtn" type="button">Decline</button>
-        <button class="invite-accept-btn" id="acceptInviteBtn" type="button">Accept &amp; Play Game</button>
+        <button class="invite-accept-btn" id="acceptInviteBtn" type="button">Accept &amp; Play</button>
       </div>
     </div>
 
@@ -1827,250 +2230,173 @@
          SCREEN 1: Start / Mode Selection + Interactive 6-Step Tutorial
          ====================================================================== -->
     <section class="start-screen" id="startScreen" aria-label="Game Mode Selection">
-      <div class="start-top-stack">
-        <div class="hero-block">
+      <div class="hero-block">
+        <div class="hero-badge-row">
           <div class="hero-die-icon" aria-hidden="true"><span></span></div>
-          <div class="hero-text">
-            <h1>Roll or Hold</h1>
-            <p>Stack your turn bank, avoid the <strong>Red 1</strong>, and be first to bank <strong>50</strong>!</p>
+          <span class="hero-goal-tag">First to Bank 50</span>
+        </div>
+        <h1>Roll or Hold</h1>
+        <p>Stack your turn bank, dodge the <strong>Red 1</strong>, and be first to reach <strong>50</strong>!</p>
+      </div>
+
+      <!-- Interactive 6-Step Animated Tutorial -->
+      <div class="tutorial-card" id="tutorialCard" aria-label="How to Play Animated Tutorial">
+        <div class="tut-top">
+          <span class="tut-badge" id="tutStepLabel">How to Play • 1 / 6</span>
+          <div class="tut-controls">
+            <button class="tut-btn" id="tutPrevBtn" type="button" aria-label="Previous step">‹ Prev</button>
+            <button class="tut-btn" id="tutNextBtn" type="button" aria-label="Next step">Next ›</button>
           </div>
         </div>
 
-        <!-- Interactive 6-Step Animated Tutorial -->
-        <div class="tutorial-card" id="tutorialCard" aria-label="How to Play Animated Tutorial">
-          <div class="tut-top">
-            <span class="tut-badge" id="tutStepLabel">How to Play • 1 / 6</span>
-            <div class="tut-controls">
-              <button class="tut-btn" id="tutPrevBtn" type="button" aria-label="Previous step">‹ Prev</button>
-              <button class="tut-btn" id="tutNextBtn" type="button" aria-label="Next step">Next ›</button>
+        <div class="tut-stage" id="tutStage">
+          <div class="tut-player active" id="tutP1">
+            <div class="tut-p-head">
+              <span>Player 1</span>
+              <span class="tut-p-tag" id="tutP1Tag">ACTIVE</span>
+            </div>
+            <div class="tut-p-score"><span id="tutP1Score">0</span> <small>/ 50</small></div>
+            <div class="tut-p-bar"><div class="tut-p-fill" id="tutP1Bar" style="width:0%"></div></div>
+            <div class="tut-mini-btns">
+              <span class="tut-mini-btn roll" id="tutP1RollBtn">Roll</span>
+              <span class="tut-mini-btn hold" id="tutP1HoldBtn">Hold</span>
             </div>
           </div>
 
-          <div class="tut-stage" id="tutStage">
-            <div class="tut-player active" id="tutP1">
-              <div class="tut-p-head">
-                <span>Player 1</span>
-                <span class="tut-p-tag" id="tutP1Tag">ACTIVE</span>
-              </div>
-              <div class="tut-p-score"><span id="tutP1Score">0</span> <small>/ 50</small></div>
-              <div class="tut-p-bar"><div class="tut-p-fill" id="tutP1Bar" style="width:0%"></div></div>
-              <div class="tut-mini-btns">
-                <span class="tut-mini-btn roll" id="tutP1RollBtn">Roll</span>
-                <span class="tut-mini-btn hold" id="tutP1HoldBtn">Hold</span>
-              </div>
+          <div class="tut-center">
+            <span class="tut-action-pill" id="tutActionPill">P1 TAPS ROLL</span>
+            <div class="tut-die" id="tutDie" data-val="4" aria-hidden="true">
+              <span class="tp tp1"></span><span class="tp tp2"></span><span class="tp tp3"></span>
+              <span class="tp tp4"></span><span class="tp tp5"></span><span class="tp tp6"></span>
+              <span class="tp tp7"></span><span class="tp tp8"></span><span class="tp tp9"></span>
             </div>
-
-            <div class="tut-center">
-              <span class="tut-action-pill" id="tutActionPill">P1 TAPS ROLL</span>
-              <div class="tut-die" id="tutDie" data-val="4" aria-hidden="true">
-                <span class="tp tp1"></span><span class="tp tp2"></span><span class="tp tp3"></span>
-                <span class="tp tp4"></span><span class="tp tp5"></span><span class="tp tp6"></span>
-                <span class="tp tp7"></span><span class="tp tp8"></span><span class="tp tp9"></span>
-              </div>
-              <span class="tut-bank-chip" id="tutBankChip">Bank: +4</span>
-            </div>
-
-            <div class="tut-player dull" id="tutP2">
-              <div class="tut-p-head">
-                <span>Player 2</span>
-                <span class="tut-p-tag" id="tutP2Tag">WAIT</span>
-              </div>
-              <div class="tut-p-score"><span id="tutP2Score">0</span> <small>/ 50</small></div>
-              <div class="tut-p-bar"><div class="tut-p-fill" id="tutP2Bar" style="width:0%"></div></div>
-              <div class="tut-mini-btns">
-                <span class="tut-mini-btn roll" id="tutP2RollBtn">Roll</span>
-                <span class="tut-mini-btn hold" id="tutP2HoldBtn">Hold</span>
-              </div>
-            </div>
+            <span class="tut-bank-chip" id="tutBankChip">Bank: +4</span>
           </div>
 
-          <p class="tut-caption" id="tutCaption">
-            <strong>1. Tap Roll:</strong> Both start at <strong>0</strong>. Player 1 taps <strong>Roll</strong> (rolls 4) to start building their unbanked <strong>Turn Bank (+4)</strong>.
-          </p>
-
-          <div class="tut-dots" id="tutDots" role="tablist" aria-label="Tutorial steps">
-            <button class="tut-dot active" type="button" data-step="0" aria-label="Step 1"></button>
-            <button class="tut-dot" type="button" data-step="1" aria-label="Step 2"></button>
-            <button class="tut-dot" type="button" data-step="2" aria-label="Step 3"></button>
-            <button class="tut-dot" type="button" data-step="3" aria-label="Step 4"></button>
-            <button class="tut-dot" type="button" data-step="4" aria-label="Step 5"></button>
-            <button class="tut-dot" type="button" data-step="5" aria-label="Step 6"></button>
+          <div class="tut-player dull" id="tutP2">
+            <div class="tut-p-head">
+              <span>Player 2</span>
+              <span class="tut-p-tag" id="tutP2Tag">WAIT</span>
+            </div>
+            <div class="tut-p-score"><span id="tutP2Score">0</span> <small>/ 50</small></div>
+            <div class="tut-p-bar"><div class="tut-p-fill" id="tutP2Bar" style="width:0%"></div></div>
+            <div class="tut-mini-btns">
+              <span class="tut-mini-btn roll" id="tutP2RollBtn">Roll</span>
+              <span class="tut-mini-btn hold" id="tutP2HoldBtn">Hold</span>
+            </div>
           </div>
+        </div>
+
+        <p class="tut-caption" id="tutCaption">
+          <strong>1. Tap Roll:</strong> Both start at <strong>0</strong>. Player 1 taps <strong>Roll</strong> (rolls 4) to start building their unbanked <strong>Turn Bank (+4)</strong>.
+        </p>
+
+        <div class="tut-dots" id="tutDots" role="tablist" aria-label="Tutorial steps">
+          <button class="tut-dot active" type="button" data-step="0" aria-label="Step 1"></button>
+          <button class="tut-dot" type="button" data-step="1" aria-label="Step 2"></button>
+          <button class="tut-dot" type="button" data-step="2" aria-label="Step 3"></button>
+          <button class="tut-dot" type="button" data-step="3" aria-label="Step 4"></button>
+          <button class="tut-dot" type="button" data-step="4" aria-label="Step 5"></button>
+          <button class="tut-dot" type="button" data-step="5" aria-label="Step 6"></button>
         </div>
       </div>
 
       <!-- Mode Selection Cards -->
-      <div class="start-bottom-stack">
-        <div class="mode-cards">
-          <button class="mode-card" id="btnChooseOnline" type="button">
-            <div class="mode-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
-            </div>
-            <div class="mode-info">
-              <b>Play Online (2 Devices)</b>
-              <span id="onlineCardSub">Invite an online friend or share a room code</span>
-            </div>
-          </button>
+      <div class="mode-cards">
+        <button class="mode-card" id="btnChooseOnline" type="button">
+          <div class="mode-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+          </div>
+          <div class="mode-info">
+            <b>Play Online (2 Players)</b>
+            <span id="onlineCardSub">Choose Stage 1–4, stake coins &amp; win +50 🪙</span>
+          </div>
+          <span class="mode-chevron" aria-hidden="true">›</span>
+        </button>
 
-          <button class="mode-card" id="btnChooseFriend" type="button">
-            <div class="mode-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
-            </div>
-            <div class="mode-info">
-              <b>Play with Friend</b>
-              <span>2-player pass &amp; play on one phone</span>
-            </div>
-          </button>
+        <button class="mode-card" id="btnChooseSaga" type="button">
+          <div class="mode-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
+          </div>
+          <div class="mode-info">
+            <b>Solo Saga vs AI (4 Worlds)</b>
+            <span id="sagaCardSub">Practice stages vs AI &amp; win +50 🪙</span>
+          </div>
+          <span class="mode-chevron" aria-hidden="true">›</span>
+        </button>
 
-          <button class="mode-card" id="btnChooseCpu" type="button">
-            <div class="mode-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 18c1.1 0 1.99-.9 1.99-2L22 6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2H0v2h24v-2h-4zM4 6h16v10H4V6z"/></svg>
-            </div>
-            <div class="mode-info">
-              <b>Play with Computer</b>
-              <span>Challenge the smart house AI</span>
-            </div>
-          </button>
-        </div>
+        <button class="mode-card" id="btnChooseFriend" type="button">
+          <div class="mode-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+          </div>
+          <div class="mode-info">
+            <b>Pass &amp; Play (1 Device)</b>
+            <span>Local 2-player duel with Sweet Shields</span>
+          </div>
+          <span class="mode-chevron" aria-hidden="true">›</span>
+        </button>
       </div>
     </section>
 
-    <!-- Bottom Pull-Out Sheet: Online Multiplayer Lobby & Room Modal -->
-    <div class="sheet-backdrop" id="onlineSheetBackdrop" hidden role="dialog" aria-modal="true" aria-labelledby="onlineSheetTitle">
-      <div class="bottom-sheet" id="onlinePanel">
-        <div class="sheet-handle" id="onlineSheetHandle" title="Swipe or tap to close"></div>
+    <!-- Bottom Pull-Out Sheet: Saga Stages Selector -->
+    <div class="sheet-backdrop" id="sagaSheetBackdrop" hidden role="dialog" aria-modal="true" aria-labelledby="sagaSheetTitle">
+      <div class="bottom-sheet" id="sagaPanel">
+        <div class="sheet-handle" id="sagaSheetHandle" title="Swipe or tap to close"></div>
         <div class="sheet-header">
-          <h3 id="onlineSheetTitle">Play Online (<span id="sheetOnlineCount">1</span> Online)</h3>
-          <button class="modal-close-btn" id="closeOnlineSheetBtn" type="button" aria-label="Close online room panel">✕</button>
+          <h3 id="sagaSheetTitle">Choose Solo Stage (+50 🪙 Win)</h3>
+          <button class="modal-close-btn" id="closeSagaSheetBtn" type="button" aria-label="Close stages panel">✕</button>
         </div>
 
-        <div class="field">
-          <label for="onlineNameInput">Your Profile Name (Edit in Top Bar Anytime)</label>
-          <input id="onlineNameInput" type="text" maxlength="16" placeholder="Enter your name" autocomplete="off">
-        </div>
-
-        <div class="online-tabs">
-          <button class="online-tab active" id="tabOnlineLobby" type="button">Online Players</button>
-          <button class="online-tab" id="tabRoomCode" type="button">Room Code</button>
-        </div>
-
-        <!-- TAB 1: Live Online Users Lobby + One-Tap Challenge -->
-        <div id="onlineLobbyPane" style="display:grid; gap:10px;">
-          <div class="lobby-list" id="onlineUsersList">
-            <p class="lobby-empty">Scanning for active players on this link…</p>
-          </div>
-          <p class="online-hint" id="outgoingInviteHint" hidden>Invite sent! Waiting for your friend to tap Accept &amp; Play Game…</p>
-        </div>
-
-        <!-- TAB 2: Fallback Room Code Create / Join -->
-        <div id="roomCodePane" hidden style="display:grid; gap:10px;">
-          <button class="start-match-btn" id="createRoomBtn" type="button">Create Private Room Code</button>
-          <div class="room-code-box" id="createdRoomBox" hidden>
-            <div>
-              <div style="font-size:0.66rem; font-weight:700; color:var(--muted); text-transform:uppercase;">Share Room Code</div>
-              <div class="room-code-val" id="createdRoomCode">-----</div>
+        <div class="stage-grid" id="stageGrid">
+          <button type="button" class="stage-card active-stage" data-stage="1">
+            <div class="stage-badge-icon">🍬</div>
+            <div class="stage-meta">
+              <div class="stage-meta-top">
+                <b>Stage 1 — Candy Meadow</b>
+                <span class="stage-goal-pill">Goal: 50 • 10 🪙</span>
+              </div>
+              <p>Classic rules, friendly AI pace, and 1 Sweet Shield each.</p>
             </div>
-            <button class="copy-code-btn" id="copyCodeBtn" type="button">Copy Code</button>
-          </div>
-          <p class="online-hint" id="waitingGuestHint" hidden>Waiting for your friend to join on their device…</p>
+          </button>
 
-          <form id="joinRoomPane" style="display:grid; grid-template-columns: 1fr auto; gap:8px; align-items:end;">
-            <div class="field">
-              <label for="joinCodeInput">Or Enter 5-Letter Code</label>
-              <input id="joinCodeInput" type="text" maxlength="5" placeholder="K7M2P" style="text-transform:uppercase; letter-spacing:0.14em; font-weight:700;" autocomplete="off">
+          <button type="button" class="stage-card" data-stage="2">
+            <div class="stage-badge-icon">🌋</div>
+            <div class="stage-meta">
+              <div class="stage-meta-top">
+                <b>Stage 2 — Hot Streak Volcano</b>
+                <span class="stage-goal-pill">Goal: 75 • 20 🪙</span>
+              </div>
+              <p>Rolling a <strong>6</strong> triggers a <strong>+2 Bonus Spark</strong>!</p>
             </div>
-            <button class="start-match-btn" id="joinRoomBtn" type="submit" style="width:auto; padding:0 18px;">Join</button>
-          </form>
-        </div>
+          </button>
 
-        <p class="online-error" id="onlineError" hidden></p>
-      </div>
-    </div>
+          <button type="button" class="stage-card" data-stage="3">
+            <div class="stage-badge-icon">🎲</div>
+            <div class="stage-meta">
+              <div class="stage-meta-top">
+                <b>Stage 3 — Double Trouble Arena</b>
+                <span class="stage-goal-pill">Goal: 100 • 30 🪙</span>
+              </div>
+              <p><strong>2 Dice at once!</strong> Single 1 wipes Turn Bank; <strong>Double 1s</strong> wipe Saved Score!</p>
+            </div>
+          </button>
 
-    <!-- Bottom Pull-Out Sheet: First-Time & Editable Player Profile (Name + Avatar) -->
-    <div class="sheet-backdrop" id="profileSheetBackdrop" hidden role="dialog" aria-modal="true" aria-labelledby="profileSheetTitle">
-      <form class="bottom-sheet" id="profileForm">
-        <div class="sheet-handle" id="profileSheetHandle" title="Swipe or tap to close"></div>
-        <div class="sheet-header">
-          <h3 id="profileSheetTitle">Your Player Profile</h3>
-          <button class="modal-close-btn" id="closeProfileSheetBtn" type="button" aria-label="Close profile panel">✕</button>
-        </div>
-        <div class="field">
-          <label for="profileNameInput">Your Name (Shown to Opponents Online)</label>
-          <input id="profileNameInput" type="text" maxlength="16" placeholder="Enter your name" required autocomplete="off">
-        </div>
-        <div class="field">
-          <label>Choose Your Avatar</label>
-          <div class="avatar-grid" id="avatarGrid" role="radiogroup" aria-label="Choose avatar">
-            <button type="button" class="avatar-choice selected" data-avatar="🎲">🎲</button>
-            <button type="button" class="avatar-choice" data-avatar="🦊">🦊</button>
-            <button type="button" class="avatar-choice" data-avatar="🐼">🐼</button>
-            <button type="button" class="avatar-choice" data-avatar="🦁">🦁</button>
-            <button type="button" class="avatar-choice" data-avatar="🐯">🐯</button>
-            <button type="button" class="avatar-choice" data-avatar="🐸">🐸</button>
-            <button type="button" class="avatar-choice" data-avatar="🦄">🦄</button>
-            <button type="button" class="avatar-choice" data-avatar="🐲">🐲</button>
-            <button type="button" class="avatar-choice" data-avatar="🚀">🚀</button>
-            <button type="button" class="avatar-choice" data-avatar="👑">👑</button>
-            <button type="button" class="avatar-choice" data-avatar="⚡">⚡</button>
-            <button type="button" class="avatar-choice" data-avatar="🔥">🔥</button>
-          </div>
-        </div>
-        <button class="start-match-btn" type="submit">Save Profile &amp; Continue</button>
-      </form>
-    </div>
-
-    <!-- Bottom Pull-Out Sheet: Local 2-Player Names Setup -->
-    <div class="sheet-backdrop" id="friendSheetBackdrop" hidden role="dialog" aria-modal="true" aria-labelledby="friendSheetTitle">
-      <form class="bottom-sheet" id="friendForm">
-        <div class="sheet-handle" id="friendSheetHandle" title="Swipe or tap to close"></div>
-        <div class="sheet-header">
-          <h3 id="friendSheetTitle">Pass &amp; Play Names</h3>
-          <button class="modal-close-btn" id="closeFriendSheetBtn" type="button" aria-label="Close player names panel">✕</button>
-        </div>
-        <div class="input-row">
-          <div class="field">
-            <label for="p1Input">Player 1 (Bottom)</label>
-            <input id="p1Input" type="text" maxlength="16" placeholder="Player 1" autocomplete="off">
-          </div>
-          <div class="field">
-            <label for="p2Input">Player 2 (Top)</label>
-            <input id="p2Input" type="text" maxlength="16" placeholder="Player 2" autocomplete="off">
-          </div>
-        </div>
-        <button class="start-match-btn" type="submit">Start 2-Player Match</button>
-      </form>
-    </div>
-
-    <!-- Fixed Centered Settings Modal -->
-    <div class="settings-backdrop" id="settingsModalBackdrop" hidden role="dialog" aria-modal="true" aria-labelledby="settingsModalTitle">
-      <div class="settings-modal">
-        <div class="settings-modal-head">
-          <h3 id="settingsModalTitle">Audio &amp; Music</h3>
-          <button class="modal-close-btn" id="closeSettingsBtn" type="button" aria-label="Close settings">✕</button>
-        </div>
-        <div class="set-row">
-          <label for="bgmTrackSelect">Music Track</label>
-          <select class="set-select" id="bgmTrackSelect">
-            <option value="0">1. Hitrun Minecraft</option>
-            <option value="1">2. Minecraft Calm</option>
-            <option value="2">3. Retro Arcade</option>
-            <option value="3">4. Subclair Instrumental</option>
-          </select>
-        </div>
-        <div class="set-row">
-          <span>Background Music</span>
-          <button class="switch-btn" id="bgmToggleBtn" type="button">OFF</button>
-        </div>
-        <div class="set-row">
-          <span>Sound Effects</span>
-          <button class="switch-btn on" id="sfxToggleBtn" type="button">ON</button>
+          <button type="button" class="stage-card" data-stage="4">
+            <div class="stage-badge-icon">👑</div>
+            <div class="stage-meta">
+              <div class="stage-meta-top">
+                <b>Stage 4 — Sudden Death Boss</b>
+                <span class="stage-goal-pill">Goal: 100 • 40 🪙</span>
+              </div>
+              <p>Beat the <strong>Dice Master AI</strong> under a 10-second turn shot clock!</p>
+            </div>
+          </button>
         </div>
       </div>
     </div>
 
     <!-- ======================================================================
-         SCREEN 2: Vertically Divided 2-Player Arena
+         SCREEN 2: Vertically Divided 2-Player Split Arena
          ====================================================================== -->
     <main class="arena" id="arenaScreen" hidden>
       <!-- TOP ZONE: Player 2 / Computer / Opponent -->
@@ -2081,7 +2407,10 @@
             <span class="pz-avatar" id="avatarP2" aria-hidden="true">🤖</span>
             <span class="pz-name" id="nameP2">Player 2</span>
           </div>
-          <span class="pz-badge" id="badgeP2">Waiting</span>
+          <div class="pz-badges-right">
+            <span class="shield-pill" id="shieldP2" title="Sweet Shield: Blocks one Red 1 bust!">🛡️ 1</span>
+            <span class="pz-badge" id="badgeP2">Waiting</span>
+          </div>
         </div>
 
         <div class="pz-metrics">
@@ -2089,11 +2418,11 @@
             <span class="pz-stat-label">Saved Score</span>
             <div class="pz-total">
               <span class="pz-score" id="scoreP2">0</span>
-              <span class="pz-goal">/ 50</span>
+              <span class="pz-goal" id="goalP2">/ 50</span>
             </div>
           </div>
           <div class="pz-stat-box bank-box">
-            <span class="pz-stat-label">Current Turn</span>
+            <span class="pz-stat-label">Turn Bank</span>
             <b class="pz-bank-val" id="bankP2">+0</b>
           </div>
         </div>
@@ -2111,9 +2440,29 @@
       <!-- CENTER SHARED 3D DICE TRAY -->
       <section class="center-tray" id="tray" aria-label="3D Dice Tray">
         <div class="specks" id="specks" aria-hidden="true"></div>
-        <div class="die-wrap" id="dieWrap" role="button" tabindex="0" aria-label="Tap die to roll">
-          <div class="cube" id="die" data-face="5" role="img" aria-label="Die showing 5"></div>
+        <span class="stage-pill-tag" id="stagePillTag">🍬 Stage 1: Candy Meadow</span>
+        <span class="shot-clock-pill" id="shotClockPill" hidden>⏱ 10s</span>
+
+        <div class="dice-stage-row" id="diceStageRow">
+          <div class="die-wrap" id="dieWrap" role="button" tabindex="0" aria-label="Tap die to roll">
+            <div class="cube" id="die" data-face="5" role="img" aria-label="Die showing 5"></div>
+          </div>
+          <div class="die-wrap" id="dieWrap2" hidden role="button" tabindex="0" aria-label="Second die">
+            <div class="cube" id="die2" data-face="4" role="img" aria-label="Second die showing 4"></div>
+          </div>
         </div>
+
+        <div class="combo-sticker" id="comboSticker" hidden aria-live="polite"></div>
+        <div id="reactionFloatLayer" aria-hidden="true"></div>
+
+        <!-- Quick-Tap Emoji Reactions (Online 2-Device Play) -->
+        <div class="reaction-bar" id="reactionBar" hidden aria-label="Send quick reaction">
+          <button type="button" class="react-btn" data-emoji="😱" title="Shocked">😱</button>
+          <button type="button" class="react-btn" data-emoji="🔥" title="On Fire">🔥</button>
+          <button type="button" class="react-btn" data-emoji="😂" title="Haha">😂</button>
+          <button type="button" class="react-btn" data-emoji="👏" title="Nice Roll">👏</button>
+        </div>
+
         <div class="status-banner" id="status" aria-live="polite">Player 1's turn — Roll to start!</div>
       </section>
 
@@ -2125,7 +2474,10 @@
             <span class="pz-avatar" id="avatarP1" aria-hidden="true">🎲</span>
             <span class="pz-name" id="nameP1">Player 1</span>
           </div>
-          <span class="pz-badge" id="badgeP1">Active Turn</span>
+          <div class="pz-badges-right">
+            <span class="shield-pill" id="shieldP1" title="Sweet Shield: Blocks one Red 1 bust!">🛡️ 1</span>
+            <span class="pz-badge" id="badgeP1">Active Turn</span>
+          </div>
         </div>
 
         <div class="pz-metrics">
@@ -2133,11 +2485,11 @@
             <span class="pz-stat-label">Saved Score</span>
             <div class="pz-total">
               <span class="pz-score" id="scoreP1">0</span>
-              <span class="pz-goal">/ 50</span>
+              <span class="pz-goal" id="goalP1">/ 50</span>
             </div>
           </div>
           <div class="pz-stat-box bank-box">
-            <span class="pz-stat-label">Current Turn</span>
+            <span class="pz-stat-label">Turn Bank</span>
             <b class="pz-bank-val" id="bankP1">+0</b>
           </div>
         </div>
@@ -2162,6 +2514,7 @@
         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94.63 1.5 1.98 2.63 3.61 2.96V19H7v2h10v-2h-4v-3.1c1.63-.33 2.98-1.46 3.61-2.96C19.08 12.63 21 10.55 21 8V7c0-1.1-.9-2-2-2zM5 8V7h2v3.82C5.84 10.4 5 9.3 5 8zm14 0c0 1.3-.84 2.4-2 2.82V7h2v1z"/></svg>
       </div>
       <h2 id="winnerTitle">Player 1 Wins!</h2>
+      <div class="coin-reward-banner" id="coinRewardBanner">+50 🪙 Credited!</div>
 
       <div class="tug-arena">
         <div class="tug-fighters">
@@ -2190,10 +2543,162 @@
       </div>
 
       <div class="victory-btns">
-        <button class="start-match-btn" id="playAgainBtn" type="button">Play Again</button>
+        <button class="primary-cta-btn" id="playAgainBtn" type="button">Play Again</button>
         <button class="btn-secondary" id="victoryModeBtn" type="button">Change Mode</button>
       </div>
     </section>
+
+    <!-- Bottom Pull-Out Sheet: Online Multiplayer Lobby & Room Code -->
+    <div class="sheet-backdrop" id="onlineSheetBackdrop" hidden role="dialog" aria-modal="true" aria-labelledby="onlineSheetTitle">
+      <div class="bottom-sheet" id="onlinePanel">
+        <div class="sheet-handle" id="onlineSheetHandle" title="Swipe or tap to close"></div>
+        <div class="sheet-header">
+          <h3 id="onlineSheetTitle">Online 2-Player (<span id="sheetOnlineCount">1</span> Online)</h3>
+          <button class="modal-close-btn" id="closeOnlineSheetBtn" type="button" aria-label="Close online panel">✕</button>
+        </div>
+
+        <div class="field">
+          <label>Select Stage &amp; Coin Entry (Winner gets +50 🪙)</label>
+          <div class="stage-pill-bar" id="onlineStageSelector">
+            <button type="button" class="stage-chip-btn active" data-stage="1">
+              <b>🍬 Stg 1</b>
+              <span>10 🪙</span>
+            </button>
+            <button type="button" class="stage-chip-btn" data-stage="2">
+              <b>🌋 Stg 2</b>
+              <span>20 🪙</span>
+            </button>
+            <button type="button" class="stage-chip-btn" data-stage="3">
+              <b>🎲 Stg 3</b>
+              <span>30 🪙</span>
+            </button>
+            <button type="button" class="stage-chip-btn" data-stage="4">
+              <b>👑 Stg 4</b>
+              <span>40 🪙</span>
+            </button>
+          </div>
+          <span id="onlineStageDesc" style="font-size:0.73rem; color:var(--muted); margin-top:2px;">
+            Stage 1 — Candy Meadow • Goal: 50 • Entry: 10 🪙 • Win: +50 🪙
+          </span>
+        </div>
+
+        <div class="online-tabs">
+          <button class="online-tab active" id="tabOnlineLobby" type="button">Online Players</button>
+          <button class="online-tab" id="tabRoomCode" type="button">Room Code</button>
+        </div>
+
+        <div id="onlineLobbyPane" style="display:grid; gap:10px;">
+          <div class="lobby-list" id="onlineUsersList">
+            <p class="lobby-empty">Scanning for active players…</p>
+          </div>
+          <p class="online-hint" id="outgoingInviteHint" hidden>Invite sent! Waiting for opponent…</p>
+        </div>
+
+        <div id="roomCodePane" hidden style="display:grid; gap:10px;">
+          <button class="primary-cta-btn" id="createRoomBtn" type="button">Create Stage Room Code</button>
+          <div class="room-code-box" id="createdRoomBox" hidden>
+            <div>
+              <div style="font-size:0.66rem; font-weight:700; color:var(--muted); text-transform:uppercase;">Share Room Code</div>
+              <div class="room-code-val" id="createdRoomCode">-----</div>
+            </div>
+            <button class="copy-code-btn" id="copyCodeBtn" type="button">Copy Code</button>
+          </div>
+          <p class="online-hint" id="waitingGuestHint" hidden>Waiting for friend to join…</p>
+
+          <form id="joinRoomPane" style="display:grid; grid-template-columns: 1fr auto; gap:8px; align-items:end;">
+            <div class="field">
+              <label for="joinCodeInput">Or Enter 5-Letter Code</label>
+              <input id="joinCodeInput" type="text" maxlength="5" placeholder="K7M2P" style="text-transform:uppercase; letter-spacing:0.14em; font-weight:700;" autocomplete="off">
+            </div>
+            <button class="primary-cta-btn" id="joinRoomBtn" type="submit" style="width:auto; padding:0 18px;">Join</button>
+          </form>
+        </div>
+
+        <p class="online-error" id="onlineError" hidden></p>
+      </div>
+    </div>
+
+    <!-- Bottom Pull-Out Sheet: Pass & Play Friend Names -->
+    <div class="sheet-backdrop" id="friendSheetBackdrop" hidden role="dialog" aria-modal="true" aria-labelledby="friendSheetTitle">
+      <form class="bottom-sheet" id="friendForm">
+        <div class="sheet-handle" id="friendSheetHandle" title="Swipe or tap to close"></div>
+        <div class="sheet-header">
+          <h3 id="friendSheetTitle">Pass &amp; Play (1 Device)</h3>
+          <button class="modal-close-btn" id="closeFriendSheetBtn" type="button" aria-label="Close friend setup">✕</button>
+        </div>
+        <div class="input-row">
+          <div class="field">
+            <label for="p1Input">Player 1 (Bottom)</label>
+            <input id="p1Input" type="text" maxlength="16" placeholder="Player 1" autocomplete="off">
+          </div>
+          <div class="field">
+            <label for="p2Input">Player 2 (Top)</label>
+            <input id="p2Input" type="text" maxlength="16" placeholder="Player 2" autocomplete="off">
+          </div>
+        </div>
+        <button class="primary-cta-btn" type="submit">Start 2-Player Match</button>
+      </form>
+    </div>
+
+    <!-- Bottom Pull-Out Sheet: Player Profile & Avatar -->
+    <div class="sheet-backdrop" id="profileSheetBackdrop" hidden role="dialog" aria-modal="true" aria-labelledby="profileSheetTitle">
+      <form class="bottom-sheet" id="profileForm">
+        <div class="sheet-handle" id="profileSheetHandle" title="Swipe or tap to close"></div>
+        <div class="sheet-header">
+          <h3 id="profileSheetTitle">Your Player Profile</h3>
+          <button class="modal-close-btn" id="closeProfileSheetBtn" type="button" aria-label="Close profile panel">✕</button>
+        </div>
+        <div class="field">
+          <label for="profileNameInput">Display Name</label>
+          <input id="profileNameInput" type="text" maxlength="16" placeholder="Enter your name" autocomplete="off">
+        </div>
+        <div class="field">
+          <label>Choose Avatar</label>
+          <div class="avatar-grid" id="avatarGrid">
+            <button type="button" class="avatar-choice selected" data-avatar="🎲">🎲</button>
+            <button type="button" class="avatar-choice" data-avatar="🦊">🦊</button>
+            <button type="button" class="avatar-choice" data-avatar="🐼">🐼</button>
+            <button type="button" class="avatar-choice" data-avatar="🦁">🦁</button>
+            <button type="button" class="avatar-choice" data-avatar="🐸">🐸</button>
+            <button type="button" class="avatar-choice" data-avatar="🐙">🐙</button>
+            <button type="button" class="avatar-choice" data-avatar="🦄">🦄</button>
+            <button type="button" class="avatar-choice" data-avatar="🐲">🐲</button>
+            <button type="button" class="avatar-choice" data-avatar="🤖">🤖</button>
+            <button type="button" class="avatar-choice" data-avatar="👾">👾</button>
+            <button type="button" class="avatar-choice" data-avatar="🔥">🔥</button>
+            <button type="button" class="avatar-choice" data-avatar="👑">👑</button>
+          </div>
+        </div>
+        <button class="primary-cta-btn" type="submit">Save Profile</button>
+      </form>
+    </div>
+
+    <!-- Centered Settings Modal -->
+    <div class="settings-backdrop" id="settingsModalBackdrop" hidden role="dialog" aria-modal="true" aria-labelledby="settingsModalTitle">
+      <div class="settings-modal">
+        <div class="sheet-header">
+          <h3 id="settingsModalTitle">Audio &amp; Music</h3>
+          <button class="modal-close-btn" id="closeSettingsBtn" type="button" aria-label="Close settings">✕</button>
+        </div>
+        <div class="set-row">
+          <label for="bgmTrackSelect">Music Track</label>
+          <select class="set-select" id="bgmTrackSelect">
+            <option value="0">1. Chill Blocks</option>
+            <option value="1">2. Midnight Lobby</option>
+            <option value="2">3. Retro Arcade</option>
+            <option value="3">4. Deep Pulse</option>
+          </select>
+        </div>
+        <div class="set-row">
+          <span>Background Music</span>
+          <button class="switch-btn" id="bgmToggleBtn" type="button">OFF</button>
+        </div>
+        <div class="set-row">
+          <span>Sound Effects</span>
+          <button class="switch-btn on" id="sfxToggleBtn" type="button">ON</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <script type="module">
@@ -2204,7 +2709,13 @@
     (function () {
       'use strict';
 
-      var TARGET = 50;
+      var STAGES = {
+        1: { id: 1, name: 'Candy Meadow', icon: '🍬', target: 50, entryFee: 10, winReward: 50, bonusOnSix: 0, dualDice: false, shotClock: 0, bossName: 'Sweet Bot' },
+        2: { id: 2, name: 'Hot Streak Volcano', icon: '🌋', target: 75, entryFee: 20, winReward: 50, bonusOnSix: 2, dualDice: false, shotClock: 0, bossName: 'Lava Roller' },
+        3: { id: 3, name: 'Double Trouble Arena', icon: '🎲', target: 100, entryFee: 30, winReward: 50, bonusOnSix: 0, dualDice: true, shotClock: 0, bossName: 'Twin Chaos AI' },
+        4: { id: 4, name: 'Sudden Death Boss', icon: '👑', target: 100, entryFee: 40, winReward: 50, bonusOnSix: 0, dualDice: false, shotClock: 10, bossName: 'Dice Master' }
+      };
+
       var HAS_RANDOM = !!(window.CSS && CSS.supports && CSS.supports('width', 'random(1px, 2px)'));
       var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       var $ = function (id) { return document.getElementById(id); };
@@ -2212,19 +2723,10 @@
       var rnd = function (a, b) { return a + Math.random() * (b - a); };
 
       /* ----------------------------------------------------------------------
-         Firebase Initialization (Uses User's Roll Or Hold Project Config)
+         Firebase Initialization (Uses Runtime Config if Available)
          ---------------------------------------------------------------------- */
-      var defaultFirebaseConfig = {
-        apiKey: "AIzaSyCEceBwQluUWCdp-G3IYoiAvXL28vApgiI",
-        authDomain: "roll-or-hold.firebaseapp.com",
-        projectId: "roll-or-hold",
-        storageBucket: "roll-or-hold.firebasestorage.app",
-        messagingSenderId: "579411034977",
-        appId: "1:579411034977:web:8668262b98e89bf55a3b20",
-        measurementId: "G-3CRC9LRNT4"
-      };
-      var appId = typeof __app_id !== 'undefined' ? __app_id : 'roll-or-hold';
-      var firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : defaultFirebaseConfig;
+      var appId = typeof __app_id !== 'undefined' ? __app_id : 'roll-or-hold-fresh';
+      var firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
 
       var fbApp = null, auth = null, db = null, authReadyPromise = null;
       if (firebaseConfig && firebaseConfig.apiKey) {
@@ -2241,14 +2743,14 @@
       }
 
       /* ----------------------------------------------------------------------
-         Audio & Music Engine (MP3 + Web Audio API Synthesis Fallback)
+         Pure Web Audio API Procedural Sound & Music Synthesizer (No External URLs)
          ---------------------------------------------------------------------- */
       var SoundFX = (function () {
         var TRACKS = [
-          { name: 'Hitrun Minecraft', src: 'hitrun-minecraft.mp3', notes: [261.63, 329.63, 392.00, 523.25, 392.00, 329.63] },
-          { name: 'Minecraft Calm',   src: 'minecraft.mp3',        notes: [220.00, 261.63, 329.63, 392.00, 329.63, 261.63] },
-          { name: 'Retro Arcade',     src: 'retro-arcade.mp3',     notes: [329.63, 392.00, 493.88, 587.33, 493.88, 392.00] },
-          { name: 'Subclair Synth',   src: 'subclair-instrumental.mp3', notes: [196.00, 246.94, 293.66, 369.99, 293.66, 246.94] }
+          { name: 'Chill Blocks',   notes: [261.63, 329.63, 392.00, 523.25, 392.00, 329.63], wave: 'triangle' },
+          { name: 'Midnight Lobby', notes: [220.00, 261.63, 329.63, 392.00, 329.63, 261.63], wave: 'sine' },
+          { name: 'Retro Arcade',   notes: [329.63, 392.00, 493.88, 587.33, 493.88, 392.00], wave: 'square' },
+          { name: 'Deep Pulse',     notes: [196.00, 246.94, 293.66, 369.99, 293.66, 246.94], wave: 'triangle' }
         ];
 
         var trackIndex = 0;
@@ -2257,11 +2759,6 @@
         var ctx = null;
         var synthTimer = null;
         var step = 0;
-        var usingFallbackBgm = false;
-
-        var bgmEl = $('bgmPlayer');
-        var cheersEl = $('sfxCheers');
-        var oopsEl = $('sfxOops');
 
         function getCtx() {
           if (!ctx) {
@@ -2298,14 +2795,14 @@
             if (!bgmOn) return;
             var c = getCtx();
             if (!c || c.state !== 'running') return;
-            var notes = TRACKS[trackIndex].notes;
-            var freq = notes[step % notes.length];
+            var track = TRACKS[trackIndex];
+            var freq = track.notes[step % track.notes.length];
             step++;
             var osc = c.createOscillator();
             var gain = c.createGain();
-            osc.type = trackIndex === 2 ? 'square' : 'triangle';
+            osc.type = track.wave;
             osc.frequency.setValueAtTime(freq, c.currentTime);
-            gain.gain.setValueAtTime(0.028, c.currentTime);
+            gain.gain.setValueAtTime(track.wave === 'square' ? 0.016 : 0.028, c.currentTime);
             gain.gain.exponentialRampToValueAtTime(0.0001, c.currentTime + 0.42);
             osc.connect(gain);
             gain.connect(c.destination);
@@ -2321,58 +2818,21 @@
           }
         }
 
-        function playBgm() {
-          if (!bgmOn) {
-            if (bgmEl) bgmEl.pause();
-            stopSynthLoop();
-            return;
-          }
-          getCtx();
-          if (!bgmEl) {
-            usingFallbackBgm = true;
-            startSynthLoop();
-            return;
-          }
-          var targetSrc = TRACKS[trackIndex].src;
-          if (!bgmEl.getAttribute('src') || bgmEl.getAttribute('src') !== targetSrc) {
-            bgmEl.src = targetSrc;
-          }
-          bgmEl.loop = true;
-          bgmEl.volume = 0.35;
-          var p = bgmEl.play();
-          if (p && typeof p.catch === 'function') {
-            p.then(function () {
-              usingFallbackBgm = false;
-              stopSynthLoop();
-            }).catch(function () {
-              usingFallbackBgm = true;
-              startSynthLoop();
-            });
-          }
-        }
-
-        if (bgmEl) {
-          bgmEl.addEventListener('error', function () {
-            usingFallbackBgm = true;
-            if (bgmOn) startSynthLoop();
-          });
-        }
-
         return {
-          unlockAndPlayBgm: function () {
+          unlock: function () {
             getCtx();
-            if (bgmOn && (usingFallbackBgm || !bgmEl || bgmEl.paused)) {
-              playBgm();
-            }
+            if (bgmOn && !synthTimer) startSynthLoop();
           },
           setTrack: function (idx) {
             trackIndex = Math.max(0, Math.min(TRACKS.length - 1, idx));
             step = 0;
-            if (bgmOn) playBgm();
+            if (bgmOn) startSynthLoop();
           },
           toggleBgm: function () {
             bgmOn = !bgmOn;
-            playBgm();
+            getCtx();
+            if (bgmOn) startSynthLoop();
+            else stopSynthLoop();
             return bgmOn;
           },
           toggleSfx: function () {
@@ -2389,8 +2849,8 @@
             tone(680, 0.14, 'triangle', 0.07, 0.06);
           },
           bank: function () {
-            tone(523.25, 0.12, 'triangle', 0.1, 0);
-            tone(659.25, 0.14, 'triangle', 0.1, 0.08);
+            tone(523.25, 0.12, 'triangle', 0.10, 0);
+            tone(659.25, 0.14, 'triangle', 0.10, 0.08);
             tone(783.99, 0.22, 'triangle', 0.11, 0.16);
           },
           bust: function () {
@@ -2398,30 +2858,45 @@
             tone(155, 0.28, 'sawtooth', 0.09, 0.12);
           },
           winHuman: function () {
-            if (!sfxOn) return;
-            if (cheersEl) {
-              cheersEl.currentTime = 0;
-              cheersEl.play().catch(function () {});
-            }
             [523.25, 659.25, 783.99, 1046.5].forEach(function (f, i) {
               tone(f, 0.28, 'triangle', 0.11, i * 0.09);
             });
           },
-          winComputer: function () {
-            if (!sfxOn) return;
-            if (oopsEl) {
-              oopsEl.currentTime = 0;
-              oopsEl.play().catch(function () {});
-            }
+          winLose: function () {
             [392.0, 349.23, 311.13, 261.63].forEach(function (f, i) {
               tone(f, 0.24, 'sawtooth', 0.07, i * 0.14);
             });
+          },
+          combo: function (tier, spokenWord) {
+            if (tier === 'shield') {
+              [440, 554.37, 659.25, 880].forEach(function (f, i) {
+                tone(f, 0.18, 'sine', 0.1, i * 0.05);
+              });
+            } else if (tier === 'rush') {
+              [587.33, 739.99, 880, 1174.66].forEach(function (f, i) {
+                tone(f, 0.2, 'triangle', 0.1, i * 0.055);
+              });
+            } else {
+              [523.25, 659.25, 783.99, 1046.5, 1318.5].forEach(function (f, i) {
+                tone(f, 0.22, 'triangle', 0.1, i * 0.06);
+              });
+            }
+            if (sfxOn && spokenWord && 'speechSynthesis' in window) {
+              try {
+                window.speechSynthesis.cancel();
+                var u = new SpeechSynthesisUtterance(spokenWord);
+                u.rate = 1.12;
+                u.pitch = 1.25;
+                u.volume = 0.75;
+                window.speechSynthesis.speak(u);
+              } catch (e) {}
+            }
           }
         };
       })();
 
       /* ----------------------------------------------------------------------
-         Interactive 6-Step Manual Tutorial Controller (Starts at 0-0)
+         Interactive 6-Step Animated Tutorial Controller
          ---------------------------------------------------------------------- */
       var Tutorial = (function () {
         var steps = [
@@ -2538,51 +3013,58 @@
           });
         }
 
-        $('tutPrevBtn').addEventListener('click', function () {
-          render(idx - 1);
-        });
-
-        $('tutNextBtn').addEventListener('click', function () {
-          render(idx + 1);
-        });
-
+        $('tutPrevBtn').addEventListener('click', function () { render(idx - 1); });
+        $('tutNextBtn').addEventListener('click', function () { render(idx + 1); });
         $('tutDots').addEventListener('click', function (e) {
           var btn = e.target.closest('.tut-dot');
-          if (!btn) return;
-          render(Number(btn.dataset.step));
+          if (btn) render(Number(btn.dataset.step));
         });
 
         render(0);
-
-        return {
-          render: render,
-          reset: function () { render(0); }
-        };
+        return { reset: function () { render(0); } };
       })();
 
       /* ----------------------------------------------------------------------
          Game State & DOM References
          ---------------------------------------------------------------------- */
-      var wrap = $('dieWrap'), die = $('die'), tray = $('tray'), rules = $('roll-rules');
+      var wrap = $('dieWrap'), die = $('die'), wrap2 = $('dieWrap2'), die2 = $('die2'), tray = $('tray'), rules = $('roll-rules');
       var seq = 0;
+      var comboTimer = null;
+      var clockTimer = null;
 
       var state = {
-        mode: 'friend', // 'friend' | 'cpu' | 'online'
+        mode: 'friend', // 'friend' | 'saga' | 'online'
+        stageId: 1,
+        selectedOnlineStageId: 1,
+        target: 50,
         names: { p1: 'Player 1', p2: 'Player 2' },
         avatars: { p1: '🎲', p2: '👤' },
         scores: { p1: 0, p2: 0 },
+        shields: { p1: 1, p2: 1 },
+        highStreak: 0,
         bank: 0,
         turn: 'p1',
+        timeLeft: 0,
         busy: false,
         over: false,
         flipped: false,
         roomCode: null,
-        mySeat: null,   // 'p1' | 'p2' in online mode
+        mySeat: null,
+        entryFeePaid: false,
+        winRewardPaid: false,
         lastRemoteRollSeq: 0,
+        lastRemoteActionSeq: 0,
+        lastRemoteComboSeq: 0,
+        lastRemoteReactSeq: 0,
+        roomActionSeq: 0,
         unsubRoom: null
       };
 
-      function buildDieFaces() {
+      function getStageConfig(stageOverride) {
+        return STAGES[stageOverride || state.stageId] || STAGES[1];
+      }
+
+      function buildDieFacesFor(cubeEl) {
         for (var f = 1; f <= 6; f++) {
           var face = document.createElement('div');
           face.className = 'face f' + f;
@@ -2591,8 +3073,13 @@
             pip.className = 'p p' + pi;
             face.appendChild(pip);
           }
-          die.appendChild(face);
+          cubeEl.appendChild(face);
         }
+      }
+
+      function buildDieFaces() {
+        buildDieFacesFor(die);
+        buildDieFacesFor(die2);
       }
 
       function makeSpecks() {
@@ -2611,7 +3098,7 @@
       }
 
       /* ----------------------------------------------------------------------
-         UI Synchronization (Dulls ONLY buttons on inactive turn)
+         UI Synchronization
          ---------------------------------------------------------------------- */
       function setStatus(msg, isBust) {
         var el = $('status');
@@ -2622,19 +3109,40 @@
       function updateUI() {
         var isP1 = state.turn === 'p1';
         var isP2 = state.turn === 'p2';
+        var cfg = getStageConfig();
+        var goal = state.target || cfg.target || 50;
 
         $('avatarP1').textContent = state.avatars.p1 || '🎲';
-        $('avatarP2').textContent = state.avatars.p2 || (state.mode === 'cpu' ? '🤖' : '👤');
+        $('avatarP2').textContent = state.avatars.p2 || (state.mode === 'saga' ? cfg.icon : '👤');
         $('nameP1').textContent = state.names.p1 + (state.mode === 'online' && state.mySeat === 'p1' ? ' (You)' : '');
         $('nameP2').textContent = state.names.p2 + (state.mode === 'online' && state.mySeat === 'p2' ? ' (You)' : '');
 
         $('scoreP1').textContent = state.scores.p1;
         $('scoreP2').textContent = state.scores.p2;
-        $('barP1').style.width = Math.min(100, (state.scores.p1 / TARGET) * 100) + '%';
-        $('barP2').style.width = Math.min(100, (state.scores.p2 / TARGET) * 100) + '%';
+        $('goalP1').textContent = '/ ' + goal;
+        $('goalP2').textContent = '/ ' + goal;
+        $('barP1').style.width = Math.min(100, (state.scores.p1 / goal) * 100) + '%';
+        $('barP2').style.width = Math.min(100, (state.scores.p2 / goal) * 100) + '%';
 
         $('bankP1').textContent = '+' + (isP1 ? state.bank : 0);
         $('bankP2').textContent = '+' + (isP2 ? state.bank : 0);
+
+        // Sweet Shield Indicators
+        var s1 = $('shieldP1'), s2 = $('shieldP2');
+        s1.textContent = state.shields.p1 > 0 ? '🛡️ 1' : '🛡️ 0';
+        s1.classList.toggle('spent', state.shields.p1 <= 0);
+        s2.textContent = state.shields.p2 > 0 ? '🛡️ 1' : '🛡️ 0';
+        s2.classList.toggle('spent', state.shields.p2 <= 0);
+
+        // Stage & Dual-Dice Tray Mode
+        var isDual = !!cfg.dualDice && (state.mode === 'saga' || state.mode === 'online');
+        tray.classList.toggle('dual-mode', isDual);
+        wrap2.hidden = !isDual;
+        $('stagePillTag').textContent = (state.mode === 'saga' || state.mode === 'online')
+          ? (cfg.icon + ' Stage ' + cfg.id + ': ' + cfg.name + ' • Goal ' + goal)
+          : '👥 Pass & Play • Goal 50';
+
+        $('reactionBar').hidden = (state.mode !== 'online' || state.over);
 
         var z1 = $('zoneP1'), z2 = $('zoneP2');
         z1.classList.toggle('active', isP1 && !state.over);
@@ -2649,15 +3157,14 @@
         } else if (state.mode === 'online') {
           $('badgeP1').textContent = isP1 ? (state.mySeat === 'p1' ? 'Your Turn' : (state.busy ? 'Rolling…' : 'Opponent Turn')) : 'Waiting';
           $('badgeP2').textContent = isP2 ? (state.mySeat === 'p2' ? 'Your Turn' : (state.busy ? 'Rolling…' : 'Opponent Turn')) : 'Waiting';
-        } else if (state.mode === 'cpu') {
+        } else if (state.mode === 'saga') {
           $('badgeP1').textContent = isP1 ? 'Active Turn' : 'Waiting';
-          $('badgeP2').textContent = isP2 ? 'AI Thinking…' : 'Computer';
+          $('badgeP2').textContent = isP2 ? 'Boss Rolling…' : cfg.bossName;
         } else {
           $('badgeP1').textContent = isP1 ? 'Active Turn' : 'Waiting';
           $('badgeP2').textContent = isP2 ? 'Active Turn' : 'Waiting';
         }
 
-        // Hide opponent's Roll & Hold buttons block completely in Online mode
         var isOnline = state.mode === 'online';
         $('actionsP1').hidden = isOnline && state.mySeat !== 'p1';
         $('actionsP2').hidden = isOnline && state.mySeat !== 'p2';
@@ -2675,18 +3182,149 @@
       }
 
       /* ----------------------------------------------------------------------
-         3D Dice Roll Physics (Supports deterministic synced face for Online)
+         Candy Crush Combo Sticker & Floating Reaction Helpers
          ---------------------------------------------------------------------- */
-      function rollDiePhysics(forcedValue) {
+      function showComboSticker(tier, emoji, title, sub, spoken) {
+        var box = $('comboSticker');
+        if (!box) return;
+        if (comboTimer) clearTimeout(comboTimer);
+
+        box.innerHTML =
+          '<div class="combo-sticker-pill tier-' + tier + '">' +
+            '<span class="combo-emoji">' + emoji + '</span>' +
+            '<span class="combo-title">' + title + '</span>' +
+            (sub ? '<span class="combo-sub">' + sub + '</span>' : '') +
+          '</div>';
+        box.hidden = false;
+
+        SoundFX.combo(tier, spoken);
+
+        if (tier === 'tasty' || tier === 'divine') {
+          tray.classList.remove('micro-shake');
+          void tray.offsetWidth;
+          tray.classList.add('micro-shake');
+          setTimeout(function () { tray.classList.remove('micro-shake'); }, 450);
+        }
+
+        if (tier === 'rush') {
+          tray.classList.add('sugar-rush');
+          setTimeout(function () { tray.classList.remove('sugar-rush'); }, 2200);
+        }
+
+        comboTimer = setTimeout(function () {
+          box.hidden = true;
+          box.textContent = '';
+        }, 1700);
+      }
+
+      function evaluateHoldCombo(gained) {
+        if (gained >= 30) {
+          return { tier: 'divine', emoji: '👑', title: 'DIVINE! UNSTOPPABLE!', sub: '+' + gained + ' MASSIVE BANK', spoken: 'Divine!' };
+        }
+        if (gained >= 20) {
+          return { tier: 'tasty', emoji: '🔥', title: 'TASTY! +' + gained, sub: 'BOLD STREAK BANKED!', spoken: 'Tasty!' };
+        }
+        if (gained >= 15) {
+          return { tier: 'sweet', emoji: '✨', title: 'SWEET! +' + gained, sub: 'NICE HOLD!', spoken: 'Sweet!' };
+        }
+        return null;
+      }
+
+      function spawnFloatingReaction(emoji, senderName) {
+        var layer = $('reactionFloatLayer');
+        if (!layer) return;
+        var el = document.createElement('div');
+        el.className = 'floating-reaction';
+        el.innerHTML = '<b>' + emoji + '</b><span>' + (senderName || 'Player') + '</span>';
+        layer.appendChild(el);
+        setTimeout(function () {
+          if (el.parentNode) el.parentNode.removeChild(el);
+        }, 1850);
+      }
+
+      /* ----------------------------------------------------------------------
+         Stage 4 Shot Clock Timer (Works in Both Solo Saga & Online 2-Player)
+         ---------------------------------------------------------------------- */
+      function stopShotClock() {
+        if (clockTimer) {
+          clearInterval(clockTimer);
+          clockTimer = null;
+        }
+        $('shotClockPill').hidden = true;
+        $('shotClockPill').classList.remove('urgent');
+      }
+
+      function startShotClock() {
+        stopShotClock();
+        var cfg = getStageConfig();
+        if ((state.mode !== 'saga' && state.mode !== 'online') || !cfg.shotClock || state.over) return;
+
+        state.timeLeft = cfg.shotClock;
+        var pill = $('shotClockPill');
+        pill.textContent = '⏱ ' + state.timeLeft + 's';
+        pill.hidden = false;
+
+        clockTimer = setInterval(async function () {
+          if (state.over || (state.mode !== 'saga' && state.mode !== 'online')) {
+            stopShotClock();
+            return;
+          }
+          if (state.busy) return;
+          state.timeLeft--;
+          pill.textContent = '⏱ ' + Math.max(0, state.timeLeft) + 's';
+          pill.classList.toggle('urgent', state.timeLeft <= 3);
+
+          if (state.timeLeft <= 0) {
+            stopShotClock();
+            var timedOutWho = state.turn;
+            if (state.mode === 'online') {
+              if (state.mySeat === timedOutWho && state.roomCode && db) {
+                var nextTurn = timedOutWho === 'p1' ? 'p2' : 'p1';
+                var nextActSeq = Math.max(state.roomActionSeq || 0, state.lastRemoteActionSeq || 0) + 1;
+                state.roomActionSeq = nextActSeq;
+                state.lastRemoteActionSeq = nextActSeq;
+                state.bank = 0;
+                state.highStreak = 0;
+                state.turn = nextTurn;
+                SoundFX.bust();
+                var tMsg = "⏰ Time's up! " + state.names[timedOutWho] + ' forfeited their turn!';
+                setStatus(tMsg, true);
+                updateUI();
+                try {
+                  await updateDoc(roomDocRef(state.roomCode), {
+                    bank: 0,
+                    turn: nextTurn,
+                    actionSeq: nextActSeq,
+                    lastAction: 'timeout',
+                    statusText: tMsg,
+                    updatedAt: serverTimestamp()
+                  });
+                } catch (e) {}
+              }
+              return;
+            }
+            state.bank = 0;
+            state.highStreak = 0;
+            SoundFX.bust();
+            setStatus("⏰ Time's up! " + state.names[timedOutWho] + ' forfeited their turn!', true);
+            switchTurn();
+          }
+        }, 1000);
+      }
+
+      /* ----------------------------------------------------------------------
+         3D Dice Roll Physics (Single & Dual Die)
+         ---------------------------------------------------------------------- */
+      function animateSingleCube(targetWrap, targetDie, forcedValue, horizontalOffset) {
         seq++;
         var k = '--r' + seq;
         var n = forcedValue || NaN;
         var vars = ['--roll', '--dx', '--dy', '--rz', '--tx', '--ty'];
-        var reach = Math.max(20, Math.min(76, (tray.clientWidth - wrap.offsetWidth) / 2 - 16));
+        var reach = Math.max(12, Math.min(44, (tray.clientWidth - targetWrap.offsetWidth) / 4));
         reach = Math.round(reach);
 
-        if (!forcedValue && HAS_RANDOM) {
-          vars.forEach(function (p) { wrap.style.removeProperty(p); });
+        if (!forcedValue && HAS_RANDOM && !horizontalOffset) {
+          vars.forEach(function (p) { targetWrap.style.removeProperty(p); });
           rules.textContent =
             '.die-wrap{--roll:random(' + k + 'a,1,6,1);' +
             '--dx:random(' + k + 'b,-' + reach + 'px,' + reach + 'px);' +
@@ -2694,149 +3332,109 @@
             '--rz:random(' + k + 'd,-32deg,32deg);' +
             '--tx:random(' + k + 'e,2,4,1);' +
             '--ty:random(' + k + 'f,-4,-2,1)}';
-          n = Math.round(parseFloat(getComputedStyle(wrap).getPropertyValue('--roll')));
+          n = Math.round(parseFloat(getComputedStyle(targetWrap).getPropertyValue('--roll')));
         }
 
-        if (!(n >= 1 && n <= 6) || forcedValue) {
+        if (!(n >= 1 && n <= 6) || forcedValue || horizontalOffset) {
           rules.textContent = '';
           if (!forcedValue) n = 1 + Math.floor(Math.random() * 6);
-          wrap.style.setProperty('--roll', n);
-          wrap.style.setProperty('--dx', Math.round(rnd(-reach, reach)) + 'px');
-          wrap.style.setProperty('--dy', Math.round(rnd(-10, 10)) + 'px');
-          wrap.style.setProperty('--rz', Math.round(rnd(-32, 32)) + 'deg');
-          wrap.style.setProperty('--tx', 2 + Math.floor(Math.random() * 3));
-          wrap.style.setProperty('--ty', -2 - Math.floor(Math.random() * 3));
+          var dxVal = horizontalOffset ? horizontalOffset : Math.round(rnd(-reach, reach));
+          targetWrap.style.setProperty('--roll', n);
+          targetWrap.style.setProperty('--dx', dxVal + 'px');
+          targetWrap.style.setProperty('--dy', Math.round(rnd(-8, 8)) + 'px');
+          targetWrap.style.setProperty('--rz', Math.round(rnd(-28, 28)) + 'deg');
+          targetWrap.style.setProperty('--tx', 2 + Math.floor(Math.random() * 3));
+          targetWrap.style.setProperty('--ty', -2 - Math.floor(Math.random() * 3));
         }
 
         n = Math.max(1, Math.min(6, n));
 
-        wrap.classList.remove('toss');
-        die.classList.remove('spin');
-        void wrap.offsetWidth;
-        wrap.classList.add('toss');
-        die.classList.add('spin');
+        targetWrap.classList.remove('toss');
+        targetDie.classList.remove('spin');
+        void targetWrap.offsetWidth;
+        targetWrap.classList.add('toss');
+        targetDie.classList.add('spin');
 
+        targetDie.dataset.face = n;
+        targetDie.setAttribute('aria-label', 'Die showing ' + n);
         return n;
       }
 
-      async function performRoll(forcedValue) {
+      async function performRoll(forcedValue, forcedValue2) {
         state.busy = true;
         updateUI();
         SoundFX.roll();
 
-        var n = rollDiePhysics(forcedValue);
-        die.dataset.face = n;
-        die.setAttribute('aria-label', 'Die showing ' + n);
+        var cfg = getStageConfig();
+        var isDual = !!cfg.dualDice && (state.mode === 'saga' || state.mode === 'online');
 
+        if (isDual) {
+          var d1 = animateSingleCube(wrap, die, forcedValue, -6);
+          var d2 = animateSingleCube(wrap2, die2, forcedValue2, 6);
+          await wait(reduced ? 180 : 950);
+          return [d1, d2];
+        }
+
+        var n = animateSingleCube(wrap, die, forcedValue, 0);
         await wait(reduced ? 180 : 950);
-        return n;
+        return [n];
       }
 
       /* ----------------------------------------------------------------------
-         Firebase Cloud Online Multiplayer Engine (Presence, Invites & Rooms)
-         ---------------------------------------------------------------------- */
-      function roomDocRef(code) {
-        return doc(db, 'artifacts', appId, 'public', 'data', 'roll_hold_rooms', code);
-      }
-
-      function generateRoomCode() {
-        var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-        var code = '';
-        for (var i = 0; i < 5; i++) {
-          code += chars.charAt(Math.floor(Math.random() * chars.length));
-        }
-        return code;
-      }
-
-      function setOnlineError(msg) {
-        var el = $('onlineError');
-        el.textContent = msg || '';
-        el.hidden = !msg;
-      }
-
-      function detachOnlineListener() {
-        if (state.unsubRoom) {
-          state.unsubRoom();
-          state.unsubRoom = null;
-        }
-        if (unsubOutgoingInvite) {
-          unsubOutgoingInvite();
-          unsubOutgoingInvite = null;
-        }
-      }
-
-      /* ----------------------------------------------------------------------
-         Online Presence, Profile Storage & Real-Time Challenge System
+         Cloud Presence, Profile, Coins Wallet & Multiplayer Sync (Firestore)
          ---------------------------------------------------------------------- */
       var myUid = null;
       var myDisplayName = 'Player-' + Math.floor(100 + Math.random() * 900);
       var myAvatar = '🎲';
-      var profileConfigured = false;
+      var myCoins = 100;
       var onlineUsers = [];
       var incomingInvite = null;
-      var outgoingInviteId = null;
       var unsubOutgoingInvite = null;
       var heartbeatTimer = null;
-
-      $('onlineNameInput').value = myDisplayName;
 
       function syncProfileUI() {
         $('topAvatar').textContent = myAvatar;
         $('topProfileName').textContent = myDisplayName;
-        $('onlineNameInput').value = myDisplayName;
-        $('profileNameInput').value = profileConfigured ? myDisplayName : '';
+        $('coinBalanceText').textContent = myCoins;
+        $('profileNameInput').value = myDisplayName;
         $('avatarGrid').querySelectorAll('.avatar-choice').forEach(function (btn) {
           btn.classList.toggle('selected', btn.dataset.avatar === myAvatar);
         });
       }
 
-      function userProfileDocRef(uid) {
-        return doc(db, 'artifacts', appId, 'users', uid, 'profile', 'main');
-      }
-
-      async function loadOrPromptUserProfile(uid) {
-        if (!db || !uid) return;
-        try {
-          var snap = await getDoc(userProfileDocRef(uid));
-          if (snap.exists() && snap.data().name) {
-            var pData = snap.data();
-            myDisplayName = pData.name;
-            myAvatar = pData.avatar || '🎲';
-            profileConfigured = true;
-            syncProfileUI();
-            await publishMyPresence('available');
-          } else {
-            syncProfileUI();
-            $('profileSheetBackdrop').hidden = false;
-            setTimeout(function () { $('profileNameInput').focus(); }, 120);
-          }
-        } catch (err) {
-          console.error('Profile load error:', err);
-          $('profileSheetBackdrop').hidden = false;
-        }
-      }
-
-      async function saveUserProfile(name, avatar) {
-        var cleanName = (name || '').trim() || myDisplayName;
-        var cleanAvatar = avatar || myAvatar || '🎲';
-        myDisplayName = cleanName;
-        myAvatar = cleanAvatar;
-        profileConfigured = true;
+      async function adjustMyCoins(delta) {
+        myCoins = Math.max(0, (Number(myCoins) || 0) + delta);
         syncProfileUI();
-        $('profileSheetBackdrop').hidden = true;
-
         if (db && myUid) {
           try {
             await setDoc(userProfileDocRef(myUid), {
               name: myDisplayName,
               avatar: myAvatar,
+              coins: myCoins,
               updatedAt: serverTimestamp()
             }, { merge: true });
-          } catch (err) {
-            console.error('Profile save error:', err);
-          }
+          } catch (err) {}
           await publishMyPresence();
         }
+      }
+
+      function updateOnlineStageSelectionUI() {
+        var cfg = getStageConfig(state.selectedOnlineStageId);
+        $('onlineStageSelector').querySelectorAll('.stage-chip-btn').forEach(function (btn) {
+          btn.classList.toggle('active', Number(btn.dataset.stage) === cfg.id);
+        });
+        $('onlineStageDesc').textContent =
+          cfg.icon + ' Stage ' + cfg.id + ' — ' + cfg.name +
+          ' • Goal: ' + cfg.target + ' • Entry: ' + cfg.entryFee + ' 🪙 • Win: +' + cfg.winReward + ' 🪙';
+        renderOnlineUsersList();
+      }
+
+      function roomDocRef(code) {
+        return doc(db, 'artifacts', appId, 'public', 'data', 'roll_hold_rooms', code);
+      }
+
+      function userProfileDocRef(uid) {
+        return doc(db, 'artifacts', appId, 'users', uid, 'profile', 'main');
       }
 
       function presenceCollectionRef() {
@@ -2855,44 +3453,75 @@
         return doc(db, 'artifacts', appId, 'public', 'data', 'roll_hold_invites', inviteId);
       }
 
+      function generateRoomCode() {
+        var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+        var code = '';
+        for (var i = 0; i < 5; i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
+        return code;
+      }
+
+      function setOnlineError(msg) {
+        var el = $('onlineError');
+        el.textContent = msg || '';
+        el.hidden = !msg;
+      }
+
+      function detachOnlineListener() {
+        if (state.unsubRoom) { state.unsubRoom(); state.unsubRoom = null; }
+        if (unsubOutgoingInvite) { unsubOutgoingInvite(); unsubOutgoingInvite = null; }
+      }
+
+      async function saveUserProfile(name, avatar) {
+        myDisplayName = (name || '').trim() || myDisplayName;
+        myAvatar = avatar || myAvatar || '🎲';
+        syncProfileUI();
+        $('profileSheetBackdrop').hidden = true;
+
+        if (db && myUid) {
+          try {
+            await setDoc(userProfileDocRef(myUid), {
+              name: myDisplayName,
+              avatar: myAvatar,
+              coins: myCoins,
+              updatedAt: serverTimestamp()
+            }, { merge: true });
+          } catch (err) {}
+          await publishMyPresence();
+        }
+      }
+
       async function publishMyPresence(statusOverride) {
         if (!db || !myUid) return;
-        var typedName = ($('onlineNameInput').value || '').trim();
-        if (typedName) myDisplayName = typedName;
         var currentStatus = statusOverride || ($('arenaScreen').hidden ? 'available' : 'in_game');
         try {
           await setDoc(presenceDocRef(myUid), {
             uid: myUid,
             name: myDisplayName,
             avatar: myAvatar,
+            coins: myCoins,
             status: currentStatus,
             lastSeen: Date.now(),
             updatedAt: serverTimestamp()
           }, { merge: true });
-        } catch (err) {
-          console.error('Presence update failed:', err);
-          setOnlineError('Firebase sync blocked: Add this domain in Firebase Auth → Authorized Domains & enable Firestore rules.');
-        }
+        } catch (err) {}
       }
 
       function renderOnlineUsersList() {
         var now = Date.now();
-        // Allow 2-minute window to prevent phone clock skew from hiding active devices
         var activeAll = onlineUsers.filter(function (u) {
           return u && u.lastSeen && Math.abs(now - u.lastSeen) < 120000;
         });
 
         var hasMe = activeAll.some(function (u) { return u.uid === myUid; });
         var totalOnline = activeAll.length + (hasMe ? 0 : 1);
-        var othersAvailable = activeAll.filter(function (u) {
-          return u.uid !== myUid;
-        });
+        var othersAvailable = activeAll.filter(function (u) { return u.uid !== myUid; });
+        var cfg = getStageConfig(state.selectedOnlineStageId);
 
         $('onlineCountText').textContent = totalOnline + ' Online';
         $('sheetOnlineCount').textContent = totalOnline;
         $('onlineCardSub').textContent = othersAvailable.length > 0
-          ? (othersAvailable.length + ' other player' + (othersAvailable.length > 1 ? 's' : '') + ' online right now — Tap to challenge!')
-          : 'Share your URL — ' + totalOnline + ' user online now';
+          ? (othersAvailable.length + ' player' + (othersAvailable.length > 1 ? 's' : '') + ' online — Stake coins & win +50 🪙!')
+          : 'Choose Stage 1–4, stake coins & win +50 🪙';
 
         var listEl = $('onlineUsersList');
         if (!listEl) return;
@@ -2901,7 +3530,9 @@
         if (othersAvailable.length === 0) {
           var empty = document.createElement('p');
           empty.className = 'lobby-empty';
-          empty.textContent = 'No other players detected yet. Open this exact URL on another phone (ensure GitHub Pages domain is added in Firebase Auth → Authorized Domains) and they will appear here!';
+          empty.textContent = db
+            ? 'No other players online right now. Open this link on another device or share a Private Stage Room Code!'
+            : 'Offline mode active — use Solo Saga or Pass & Play, or connect cloud sync for online play.';
           listEl.appendChild(empty);
           return;
         }
@@ -2919,22 +3550,43 @@
           left.appendChild(av);
 
           var dot = document.createElement('span');
-          dot.className = 'online-live-dot';
+          dot.className = 'live-dot';
           left.appendChild(dot);
+
+          var meta = document.createElement('div');
+          meta.className = 'lobby-user-meta';
 
           var nameEl = document.createElement('b');
           nameEl.textContent = player.name || 'Guest Player';
-          left.appendChild(nameEl);
+          meta.appendChild(nameEl);
+
+          var coinEl = document.createElement('span');
+          coinEl.className = 'lobby-user-coins';
+          var oppCoins = typeof player.coins === 'number' ? player.coins : 100;
+          coinEl.textContent = '🪙 ' + oppCoins + ' coins';
+          meta.appendChild(coinEl);
+
+          left.appendChild(meta);
 
           var btn = document.createElement('button');
           btn.type = 'button';
           btn.className = 'challenge-btn';
           var isBusy = player.status === 'in_game';
-          btn.textContent = isBusy ? 'In Match' : 'Challenge';
-          btn.disabled = isBusy;
-          btn.addEventListener('click', function () {
-            sendDirectChallenge(player);
-          });
+          var iHaveCoins = myCoins >= cfg.entryFee;
+          var oppHasCoins = oppCoins >= cfg.entryFee;
+          if (isBusy) {
+            btn.textContent = 'In Match';
+            btn.disabled = true;
+          } else if (!iHaveCoins) {
+            btn.textContent = 'Need ' + cfg.entryFee + ' 🪙';
+            btn.disabled = true;
+          } else if (!oppHasCoins) {
+            btn.textContent = 'Low Coins';
+            btn.disabled = true;
+          } else {
+            btn.textContent = 'Play Stg ' + cfg.id + ' (' + cfg.entryFee + ' 🪙)';
+          }
+          btn.addEventListener('click', function () { sendDirectChallenge(player); });
 
           row.appendChild(left);
           row.appendChild(btn);
@@ -2945,50 +3597,75 @@
       async function sendDirectChallenge(targetPlayer) {
         if (!db || !myUid || !targetPlayer || !targetPlayer.uid) return;
         setOnlineError('');
-        var hostName = ($('onlineNameInput').value || '').trim() || myDisplayName;
-        myDisplayName = hostName;
+        var cfg = getStageConfig(state.selectedOnlineStageId);
+        if (myCoins < cfg.entryFee) {
+          setOnlineError('You need ' + cfg.entryFee + ' 🪙 to challenge Stage ' + cfg.id + '!');
+          return;
+        }
+        var oppCoins = typeof targetPlayer.coins === 'number' ? targetPlayer.coins : 100;
+        if (oppCoins < cfg.entryFee) {
+          setOnlineError((targetPlayer.name || 'Opponent') + ' needs ' + cfg.entryFee + ' 🪙 for Stage ' + cfg.id + '.');
+          return;
+        }
+
         await publishMyPresence('available');
 
         var code = generateRoomCode();
         var invId = myUid + '_' + targetPlayer.uid;
-        outgoingInviteId = invId;
 
         try {
           await setDoc(roomDocRef(code), {
             code: code,
+            stageId: cfg.id,
+            target: cfg.target,
+            entryFee: cfg.entryFee,
+            winReward: cfg.winReward,
             status: 'waiting',
             p1Uid: myUid,
-            p1Name: hostName,
+            p1Name: myDisplayName,
             p1Avatar: myAvatar,
             p2Uid: targetPlayer.uid,
             p2Name: targetPlayer.name || 'Player 2',
             p2Avatar: targetPlayer.avatar || '🎲',
             p1Score: 0,
             p2Score: 0,
+            p1Shield: 1,
+            p2Shield: 1,
             bank: 0,
             turn: 'p1',
             rollSeq: 0,
+            actionSeq: 0,
+            comboSeq: 0,
+            comboData: null,
+            reactSeq: 0,
+            reactData: null,
             lastRoll: 5,
+            lastRoll2: 4,
             lastRoller: null,
             lastAction: 'init',
             winner: null,
-            statusText: hostName + "'s turn — Roll to start!",
+            statusText: myDisplayName + "'s turn — Roll to start!",
             createdAt: serverTimestamp()
           });
 
           await setDoc(inviteDocRef(invId), {
             id: invId,
             fromUid: myUid,
-            fromName: hostName,
+            fromName: myDisplayName,
             fromAvatar: myAvatar,
             toUid: targetPlayer.uid,
             toName: targetPlayer.name || 'Player 2',
             roomCode: code,
+            stageId: cfg.id,
+            stageName: cfg.name,
+            stageIcon: cfg.icon,
+            entryFee: cfg.entryFee,
+            winReward: cfg.winReward,
             status: 'pending',
             createdAt: Date.now()
           });
 
-          $('outgoingInviteHint').textContent = 'Sent invite to ' + (targetPlayer.name || 'friend') + '! Waiting for Accept & Play Game…';
+          $('outgoingInviteHint').textContent = 'Sent Stage ' + cfg.id + ' (' + cfg.entryFee + ' 🪙) invite to ' + (targetPlayer.name || 'friend') + '! Waiting…';
           $('outgoingInviteHint').hidden = false;
 
           if (unsubOutgoingInvite) unsubOutgoingInvite();
@@ -3007,22 +3684,38 @@
               $('outgoingInviteHint').hidden = true;
               setOnlineError((targetPlayer.name || 'Player') + ' declined the invite.');
             }
-          });
+          }, function (err) { console.error(err); });
         } catch (err) {
-          console.error('Failed to send challenge:', err);
-          setOnlineError('Could not send invite. Check internet connection.');
+          setOnlineError('Could not send invite. Check your connection.');
         }
       }
 
       function initRealtimePresenceAndInvites() {
         if (!db || !authReadyPromise) {
-          setOnlineError('Firebase connection unavailable.');
+          renderOnlineUsersList();
           return;
         }
         authReadyPromise.then(async function (user) {
           if (!user) return;
           myUid = user.uid;
-          await loadOrPromptUserProfile(myUid);
+          try {
+            var snap = await getDoc(userProfileDocRef(myUid));
+            if (snap.exists()) {
+              var pData = snap.data();
+              if (pData.name) myDisplayName = pData.name;
+              if (pData.avatar) myAvatar = pData.avatar;
+              if (typeof pData.coins === 'number') myCoins = pData.coins;
+              syncProfileUI();
+            } else {
+              await setDoc(userProfileDocRef(myUid), {
+                name: myDisplayName,
+                avatar: myAvatar,
+                coins: myCoins,
+                updatedAt: serverTimestamp()
+              }, { merge: true });
+            }
+          } catch (e) {}
+
           await publishMyPresence('available');
 
           if (heartbeatTimer) clearInterval(heartbeatTimer);
@@ -3033,15 +3726,10 @@
 
           onSnapshot(presenceCollectionRef(), function (snapshot) {
             var list = [];
-            snapshot.forEach(function (docSnap) {
-              list.push(docSnap.data());
-            });
+            snapshot.forEach(function (docSnap) { list.push(docSnap.data()); });
             onlineUsers = list;
             renderOnlineUsersList();
-          }, function (err) {
-            console.error('Presence listener error:', err);
-            setOnlineError('Cannot read online players: Check Firestore Rules for /artifacts/roll-or-hold/public/data.');
-          });
+          }, function (err) { console.error(err); });
 
           onSnapshot(invitesCollectionRef(), function (snapshot) {
             var latestPending = null;
@@ -3056,37 +3744,38 @@
 
             incomingInvite = latestPending;
             if (latestPending) {
-              $('inviteSenderAvatar').textContent = latestPending.fromAvatar || '🎲';
-              $('inviteSenderTitle').textContent = (latestPending.fromName || 'A friend') + ' is trying to play with you online!';
-              $('inviteSenderSub').textContent = 'Tap Accept & Play Game to join ' + (latestPending.fromName || 'them') + ' now';
+              var invCfg = getStageConfig(latestPending.stageId || 1);
+              var fee = typeof latestPending.entryFee === 'number' ? latestPending.entryFee : invCfg.entryFee;
+              var reward = typeof latestPending.winReward === 'number' ? latestPending.winReward : invCfg.winReward;
+              $('inviteSenderAvatar').textContent = latestPending.fromAvatar || invCfg.icon || '🎲';
+              $('inviteSenderTitle').textContent = (latestPending.fromName || 'A friend') + ' challenges you to Stage ' + invCfg.id + '!';
+              $('inviteSenderSub').textContent = invCfg.icon + ' ' + invCfg.name + ' • Entry: ' + fee + ' 🪙 • Win: +' + reward + ' 🪙';
+              $('acceptInviteBtn').textContent = myCoins >= fee ? ('Accept (' + fee + ' 🪙)') : ('Need ' + fee + ' 🪙');
+              $('acceptInviteBtn').disabled = myCoins < fee;
               $('inviteToast').hidden = false;
             } else {
               $('inviteToast').hidden = true;
             }
-          }, function (err) {
-            console.error('Invites listener error:', err);
-          });
-        }).catch(function (err) {
-          console.error('Auth presence failed:', err);
-          setOnlineError('Firebase Auth blocked on this URL (' + window.location.hostname + '). Add this domain in Firebase Console → Authentication → Settings → Authorized domains.');
-        });
+          }, function (err) { console.error(err); });
+        }).catch(function (err) { console.error(err); });
       }
 
       window.addEventListener('beforeunload', function () {
-        if (db && myUid) {
-          deleteDoc(presenceDocRef(myUid)).catch(function () {});
-        }
+        if (db && myUid) deleteDoc(presenceDocRef(myUid)).catch(function () {});
       });
 
       $('acceptInviteBtn').addEventListener('click', async function () {
         if (!incomingInvite || !db || !myUid) return;
-        SoundFX.unlockAndPlayBgm();
+        SoundFX.unlock();
         var inv = incomingInvite;
+        var invCfg = getStageConfig(inv.stageId || 1);
+        var fee = typeof inv.entryFee === 'number' ? inv.entryFee : invCfg.entryFee;
+        if (myCoins < fee) {
+          setOnlineError('You need ' + fee + ' 🪙 to accept Stage ' + invCfg.id + '.');
+          return;
+        }
         $('inviteToast').hidden = true;
         incomingInvite = null;
-
-        var myName = ($('onlineNameInput').value || '').trim() || myDisplayName;
-        myDisplayName = myName;
 
         try {
           var snap = await getDoc(roomDocRef(inv.roomCode));
@@ -3097,7 +3786,7 @@
           var roomData = snap.data();
           var updatedRoom = {
             p2Uid: myUid,
-            p2Name: myName,
+            p2Name: myDisplayName,
             p2Avatar: myAvatar,
             status: 'playing',
             statusText: (roomData.p1Name || inv.fromName || 'Player 1') + "'s turn — Roll to start!",
@@ -3105,16 +3794,11 @@
           };
 
           await updateDoc(roomDocRef(inv.roomCode), updatedRoom);
-          await updateDoc(inviteDocRef(inv.id), {
-            status: 'accepted',
-            toName: myName
-          });
-
+          await updateDoc(inviteDocRef(inv.id), { status: 'accepted', toName: myDisplayName });
           await publishMyPresence('in_game');
           launchOnlineArena(inv.roomCode, 'p2', Object.assign({}, roomData, updatedRoom));
           subscribeToRoom(inv.roomCode);
         } catch (err) {
-          console.error('Accept invite failed:', err);
           setOnlineError('Could not start online game. Try again.');
         }
       });
@@ -3124,16 +3808,19 @@
         var invId = incomingInvite.id;
         $('inviteToast').hidden = true;
         incomingInvite = null;
-        try {
-          await updateDoc(inviteDocRef(invId), { status: 'declined' });
-        } catch (err) {}
+        try { await updateDoc(inviteDocRef(invId), { status: 'declined' }); } catch (err) {}
       });
 
       initRealtimePresenceAndInvites();
 
       async function createOnlineRoom() {
         if (!db || !authReadyPromise) {
-          setOnlineError('Firebase is not connected. Check internet connection.');
+          setOnlineError('Cloud multiplayer is unavailable in offline mode.');
+          return;
+        }
+        var cfg = getStageConfig(state.selectedOnlineStageId);
+        if (myCoins < cfg.entryFee) {
+          setOnlineError('You need ' + cfg.entryFee + ' 🪙 to create a Stage ' + cfg.id + ' room.');
           return;
         }
         setOnlineError('');
@@ -3142,43 +3829,51 @@
         try {
           var user = await authReadyPromise;
           if (!user) throw new Error('Auth failed');
-
-          var hostName = ($('onlineNameInput').value || '').trim() || myDisplayName || 'Player 1';
-          myDisplayName = hostName;
           var code = generateRoomCode();
 
           await setDoc(roomDocRef(code), {
             code: code,
+            stageId: cfg.id,
+            target: cfg.target,
+            entryFee: cfg.entryFee,
+            winReward: cfg.winReward,
             status: 'waiting',
             p1Uid: user.uid,
-            p1Name: hostName,
+            p1Name: myDisplayName,
             p1Avatar: myAvatar,
             p2Uid: null,
             p2Name: 'Waiting…',
             p2Avatar: '🎲',
             p1Score: 0,
             p2Score: 0,
+            p1Shield: 1,
+            p2Shield: 1,
             bank: 0,
             turn: 'p1',
             rollSeq: 0,
+            actionSeq: 0,
+            comboSeq: 0,
+            comboData: null,
+            reactSeq: 0,
+            reactData: null,
             lastRoll: 5,
+            lastRoll2: 4,
             lastRoller: null,
             lastAction: 'init',
             winner: null,
-            statusText: hostName + "'s turn — Roll to start!",
+            statusText: myDisplayName + "'s turn — Roll to start!",
             createdAt: serverTimestamp()
           });
 
           state.mySeat = 'p1';
           state.roomCode = code;
-          $('createdRoomCode').textContent = code;
+          $('createdRoomCode').textContent = code + ' (Stg ' + cfg.id + ')';
           $('createdRoomBox').hidden = false;
+          $('waitingGuestHint').textContent = 'Waiting for opponent (' + cfg.entryFee + ' 🪙 entry)…';
           $('waitingGuestHint').hidden = false;
-
           subscribeToRoom(code);
         } catch (err) {
-          console.error(err);
-          setOnlineError('Could not create room. Ensure Firestore & Anonymous Auth are enabled.');
+          setOnlineError('Could not create room. Check connection.');
         } finally {
           $('createRoomBtn').disabled = false;
         }
@@ -3186,7 +3881,7 @@
 
       async function joinOnlineRoom(rawCode) {
         if (!db || !authReadyPromise) {
-          setOnlineError('Firebase is not connected.');
+          setOnlineError('Cloud multiplayer is unavailable in offline mode.');
           return;
         }
         var code = (rawCode || '').trim().toUpperCase();
@@ -3203,7 +3898,7 @@
 
           var snap = await getDoc(roomDocRef(code));
           if (!snap.exists()) {
-            setOnlineError('Room "' + code + '" not found. Check the code and try again.');
+            setOnlineError('Room "' + code + '" not found.');
             return;
           }
           var data = snap.data();
@@ -3211,12 +3906,16 @@
             setOnlineError('This room already has 2 players.');
             return;
           }
+          var roomCfg = getStageConfig(data.stageId || 1);
+          var fee = typeof data.entryFee === 'number' ? data.entryFee : roomCfg.entryFee;
+          if (myCoins < fee) {
+            setOnlineError('This room is Stage ' + roomCfg.id + ' (' + fee + ' 🪙 entry) — you have ' + myCoins + ' 🪙.');
+            return;
+          }
 
-          var guestName = ($('onlineNameInput').value || '').trim() || myDisplayName || 'Player 2';
-          myDisplayName = guestName;
           await updateDoc(roomDocRef(code), {
             p2Uid: user.uid,
-            p2Name: guestName,
+            p2Name: myDisplayName,
             p2Avatar: myAvatar,
             status: 'playing',
             statusText: (data.p1Name || 'Player 1') + "'s turn — Roll to start!",
@@ -3225,13 +3924,12 @@
 
           await publishMyPresence('in_game');
           launchOnlineArena(code, 'p2', Object.assign({}, data, {
-            p2Name: guestName,
+            p2Name: myDisplayName,
             p2Avatar: myAvatar,
             status: 'playing'
           }));
           subscribeToRoom(code);
         } catch (err) {
-          console.error(err);
           setOnlineError('Unable to join room. Check your connection.');
         } finally {
           $('joinRoomBtn').disabled = false;
@@ -3239,8 +3937,15 @@
       }
 
       function launchOnlineArena(code, seat, roomData) {
-        SoundFX.unlockAndPlayBgm();
+        stopShotClock();
+        SoundFX.unlock();
+        var stageId = roomData.stageId || 1;
+        var cfg = getStageConfig(stageId);
+        var fee = typeof roomData.entryFee === 'number' ? roomData.entryFee : cfg.entryFee;
+
         state.mode = 'online';
+        state.stageId = stageId;
+        state.target = roomData.target || cfg.target || 50;
         state.roomCode = code;
         state.mySeat = seat;
         state.names.p1 = roomData.p1Name || 'Player 1';
@@ -3249,28 +3954,42 @@
         state.avatars.p2 = roomData.p2Avatar || '🎲';
         state.scores.p1 = roomData.p1Score || 0;
         state.scores.p2 = roomData.p2Score || 0;
+        state.shields.p1 = typeof roomData.p1Shield === 'number' ? roomData.p1Shield : 1;
+        state.shields.p2 = typeof roomData.p2Shield === 'number' ? roomData.p2Shield : 1;
+        state.highStreak = 0;
         state.bank = roomData.bank || 0;
         state.turn = roomData.turn || 'p1';
         state.busy = false;
         state.over = false;
+        state.winRewardPaid = false;
         state.lastRemoteRollSeq = roomData.rollSeq || 0;
         state.lastRemoteActionSeq = roomData.actionSeq || 0;
+        state.lastRemoteComboSeq = roomData.comboSeq || 0;
+        state.lastRemoteReactSeq = roomData.reactSeq || 0;
         state.roomActionSeq = roomData.actionSeq || 0;
         state.flipped = false;
+
+        if (!state.entryFeePaid && fee > 0) {
+          state.entryFeePaid = true;
+          adjustMyCoins(-fee);
+        }
 
         $('zoneP2').classList.remove('flipped');
         $('startScreen').hidden = true;
         $('onlineSheetBackdrop').hidden = true;
+        $('sagaSheetBackdrop').hidden = true;
         $('victoryOverlay').hidden = true;
         $('arenaScreen').hidden = false;
         $('changeModeBtn').hidden = false;
         $('flipBtn').hidden = true;
-        $('roomBadgeBtn').textContent = 'ROOM: ' + code;
+        $('roomBadgeBtn').textContent = 'STG ' + cfg.id + ' • ' + code;
         $('roomBadgeBtn').hidden = false;
 
         die.dataset.face = roomData.lastRoll || 5;
+        die2.dataset.face = roomData.lastRoll2 || 4;
         setStatus(roomData.statusText || (state.names.p1 + "'s turn — Roll to start!"));
         updateUI();
+        startShotClock();
       }
 
       function subscribeToRoom(code) {
@@ -3279,58 +3998,65 @@
           if (!snap.exists()) return;
           var data = snap.data();
 
-          // Launch arena for Host once Guest joins
           if ($('arenaScreen').hidden && data.status === 'playing') {
             publishMyPresence('in_game');
+            state.entryFeePaid = false;
             launchOnlineArena(code, state.mySeat, data);
             return;
           }
-
           if ($('arenaScreen').hidden) return;
 
           var incomingActSeq = data.actionSeq || 0;
           var incomingRollSeq = data.rollSeq || 0;
+          var incomingComboSeq = data.comboSeq || 0;
+          var incomingReactSeq = data.reactSeq || 0;
+          if (incomingActSeq > (state.roomActionSeq || 0)) state.roomActionSeq = incomingActSeq;
 
-          // Keep global room sequence monotonically synced across both devices
-          if (incomingActSeq > (state.roomActionSeq || 0)) {
-            state.roomActionSeq = incomingActSeq;
-          }
-
-          // Always synchronize authoritative turn/scores even if sequences match
           var prevRollSeq = state.lastRemoteRollSeq || 0;
           var prevActSeq = state.lastRemoteActionSeq || 0;
+          if (incomingActSeq > prevActSeq) state.lastRemoteActionSeq = incomingActSeq;
 
-          if (incomingActSeq > prevActSeq) {
-            state.lastRemoteActionSeq = incomingActSeq;
+          // Sync Floating Emoji Reactions
+          if (incomingReactSeq > (state.lastRemoteReactSeq || 0)) {
+            state.lastRemoteReactSeq = incomingReactSeq;
+            if (data.reactData && data.reactData.seat !== state.mySeat) {
+              spawnFloatingReaction(data.reactData.emoji, data.reactData.name);
+            }
           }
 
-          // Handle Rematch Reset
           if (data.lastAction === 'rematch' && state.over) {
+            var rCfg = getStageConfig(data.stageId || state.stageId);
+            var rFee = typeof data.entryFee === 'number' ? data.entryFee : rCfg.entryFee;
             state.over = false;
             state.busy = false;
+            state.winRewardPaid = false;
             state.scores = { p1: 0, p2: 0 };
+            state.shields = { p1: 1, p2: 1 };
+            state.highStreak = 0;
             state.bank = 0;
             state.turn = 'p1';
             state.lastRemoteRollSeq = incomingRollSeq;
             state.lastRemoteActionSeq = incomingActSeq;
+            state.lastRemoteComboSeq = incomingComboSeq;
             state.roomActionSeq = incomingActSeq;
+            if (rFee > 0) adjustMyCoins(-rFee);
             $('victoryOverlay').hidden = true;
             die.dataset.face = 5;
+            die2.dataset.face = 4;
             setStatus(data.statusText || (state.names.p1 + "'s turn — Roll to start!"));
             updateUI();
+            startShotClock();
             return;
           }
 
-          // Animate remote dice roll if triggered by the opponent device
           if (incomingRollSeq > prevRollSeq) {
             state.lastRemoteRollSeq = incomingRollSeq;
             if (data.lastRoller && data.lastRoller !== state.mySeat) {
-              try {
-                await performRoll(data.lastRoll);
-              } finally {
-                state.busy = false;
-              }
-              if (data.lastRoll === 1) {
+              try { await performRoll(data.lastRoll, data.lastRoll2 || 4); } finally { state.busy = false; }
+              if (data.lastAction === 'shield_save') {
+                var shieldEl = $(data.lastRoller === 'p1' ? 'shieldP1' : 'shieldP2');
+                if (shieldEl) { shieldEl.classList.add('shatter'); }
+              } else if (data.lastAction === 'bust_roll') {
                 SoundFX.bust();
                 tray.classList.remove('bust');
                 void tray.offsetWidth;
@@ -3344,48 +4070,83 @@
             SoundFX.bank();
           }
 
-          // Always apply authoritative room scores, bank, and turn so turn never locks
+          // Sync Candy Crush Combo Stickers across both devices
+          if (incomingComboSeq > (state.lastRemoteComboSeq || 0)) {
+            state.lastRemoteComboSeq = incomingComboSeq;
+            if (data.comboData && data.comboData.seat !== state.mySeat) {
+              showComboSticker(
+                data.comboData.tier,
+                data.comboData.emoji,
+                data.comboData.title,
+                data.comboData.sub,
+                data.comboData.spoken
+              );
+            }
+          }
+
+          var prevTurn = state.turn;
           state.names.p1 = data.p1Name || state.names.p1;
           state.names.p2 = data.p2Name || state.names.p2;
           state.avatars.p1 = data.p1Avatar || state.avatars.p1;
           state.avatars.p2 = data.p2Avatar || state.avatars.p2;
           state.scores.p1 = data.p1Score || 0;
           state.scores.p2 = data.p2Score || 0;
+          state.shields.p1 = typeof data.p1Shield === 'number' ? data.p1Shield : state.shields.p1;
+          state.shields.p2 = typeof data.p2Shield === 'number' ? data.p2Shield : state.shields.p2;
           state.bank = data.bank || 0;
           state.turn = data.turn || 'p1';
           state.busy = false;
 
           if (data.statusText) {
-            setStatus(data.statusText, data.lastAction === 'bust' || data.lastAction === 'bust_roll');
+            setStatus(data.statusText, data.lastAction === 'bust' || data.lastAction === 'bust_roll' || data.lastAction === 'timeout');
           }
           updateUI();
+          if (prevTurn !== state.turn && !state.over) startShotClock();
 
-          if (data.winner && !state.over) {
-            finishMatch(data.winner);
-          }
+          if (data.winner && !state.over) finishMatch(data.winner);
         }, function (err) {
           state.busy = false;
           updateUI();
-          console.error('Online room sync error:', err);
+          console.error(err);
         });
       }
 
       /* ----------------------------------------------------------------------
-         Turn & Game Rules Logic (Offline + Online Synced)
+         Turn, Sweet Shield, Saga Boss AI & Game Rules Logic
          ---------------------------------------------------------------------- */
-      async function handleBust(who) {
+      function triggerShieldSave(who) {
+        state.shields[who] = 0;
+        state.busy = false;
+        var shieldEl = $(who === 'p1' ? 'shieldP1' : 'shieldP2');
+        if (shieldEl) {
+          shieldEl.classList.remove('shatter');
+          void shieldEl.offsetWidth;
+          shieldEl.classList.add('shatter');
+        }
+        showComboSticker('shield', '🛡️', 'SWEET SHIELD!', 'RED 1 BLOCKED • BANK SAVED!', 'Shield Save!');
+        setStatus('🛡️ ' + state.names[who] + "'s Sweet Shield shattered and saved +" + state.bank + '!', false);
+        updateUI();
+        if (state.mode === 'saga' || state.mode === 'online') startShotClock();
+      }
+
+      async function handleBust(who, snakeEyes) {
         SoundFX.bust();
         state.bank = 0;
+        state.highStreak = 0;
+        if (snakeEyes) {
+          state.scores[who] = 0;
+        }
         var nextTurn = who === 'p1' ? 'p2' : 'p1';
         var nextName = state.names[nextTurn];
-        var msg = state.names[who] + ' rolled a RED 1! Bank lost — ' + nextName + "'s turn.";
-        setStatus(msg, true);
+        var bustMsg = snakeEyes
+          ? ('🐍 SNAKE EYES! ' + state.names[who] + ' lost ENTIRE saved score — ' + nextName + "'s turn!")
+          : (state.names[who] + ' rolled a RED 1! Bank lost — ' + nextName + "'s turn.");
+        setStatus(bustMsg, true);
 
         tray.classList.remove('bust');
         void tray.offsetWidth;
         tray.classList.add('bust');
 
-        // Online mode already committed the atomic bust_roll state in handleHumanRoll
         if (state.mode === 'online') {
           state.turn = nextTurn;
           state.busy = false;
@@ -3405,13 +4166,66 @@
       function switchTurn() {
         state.turn = state.turn === 'p1' ? 'p2' : 'p1';
         state.bank = 0;
+        state.highStreak = 0;
         state.busy = false;
         updateUI();
 
-        if (state.turn === 'p2' && state.mode === 'cpu') {
+        if (state.turn === 'p2' && state.mode === 'saga') {
+          stopShotClock();
           runComputerTurn();
         } else {
           setStatus(state.names[state.turn] + "'s turn — Roll or Hold!");
+          if (state.mode === 'saga') startShotClock();
+        }
+      }
+
+      async function runComputerTurn() {
+        var cfg = getStageConfig();
+        setStatus(cfg.bossName + ' is rolling…');
+        await wait(reduced ? 250 : 750);
+
+        while (!state.over && state.turn === 'p2' && state.mode === 'saga') {
+          var dice = await performRoll();
+          var hasOne = dice.indexOf(1) !== -1;
+          var isSnakeEyes = dice.length === 2 && dice[0] === 1 && dice[1] === 1;
+
+          if (hasOne) {
+            if (state.shields.p2 > 0 && !isSnakeEyes) {
+              triggerShieldSave('p2');
+              await wait(reduced ? 250 : 750);
+              continue;
+            }
+            await handleBust('p2', isSnakeEyes);
+            return;
+          }
+
+          SoundFX.land();
+          var rollSum = dice.reduce(function (a, b) { return a + b; }, 0);
+          var sixBonus = (cfg.bonusOnSix && dice.indexOf(6) !== -1) ? cfg.bonusOnSix : 0;
+          state.bank += rollSum + sixBonus;
+
+          if (dice.some(function (v) { return v >= 5; })) {
+            state.highStreak++;
+            if (state.highStreak === 3) {
+              showComboSticker('rush', '⚡', 'SUGAR RUSH!', '3 HIGH ROLLS IN A ROW!', 'Sugar Rush!');
+            }
+          } else {
+            state.highStreak = 0;
+          }
+          updateUI();
+
+          var baseThreshold = cfg.dualDice ? 24 : 16;
+          var holdThreshold = state.scores.p2 > state.scores.p1 + 12 ? Math.max(12, baseThreshold - 4) : baseThreshold;
+          if (state.scores.p2 + state.bank >= state.target || state.bank >= holdThreshold) {
+            setStatus(cfg.bossName + ' rolled ' + dice.join(' & ') + ' and holds +' + state.bank + '.');
+            await wait(reduced ? 250 : 700);
+            state.busy = false;
+            await handleHold('p2');
+            return;
+          }
+
+          setStatus(cfg.bossName + ' rolled ' + dice.join(' & ') + ' (Turn Bank: +' + state.bank + ') — rolling again…');
+          await wait(reduced ? 200 : 650);
         }
       }
 
@@ -3419,11 +4233,19 @@
         if (state.bank <= 0 || state.busy || state.over || state.turn !== who) return;
         if (state.mode === 'online' && state.mySeat !== who) return;
 
+        stopShotClock();
         SoundFX.bank();
         var gained = state.bank;
         state.scores[who] += gained;
         state.bank = 0;
-        var won = state.scores[who] >= TARGET;
+        state.highStreak = 0;
+
+        var combo = evaluateHoldCombo(gained);
+        if (combo) {
+          showComboSticker(combo.tier, combo.emoji, combo.title, combo.sub, combo.spoken);
+        }
+
+        var won = state.scores[who] >= state.target;
         var nextTurn = who === 'p1' ? 'p2' : 'p1';
         var nextName = state.names[nextTurn];
         var msg = won
@@ -3431,18 +4253,25 @@
           : (state.names[who] + ' banked +' + gained + '! ' + nextName + "'s turn.");
 
         if (state.mode === 'online' && state.roomCode) {
-          if (!won) state.turn = nextTurn;
+          if (!won) {
+            state.turn = nextTurn;
+            startShotClock();
+          }
           state.busy = false;
           var nextActSeq = Math.max(state.roomActionSeq || 0, state.lastRemoteActionSeq || 0) + 1;
           state.roomActionSeq = nextActSeq;
           state.lastRemoteActionSeq = nextActSeq;
+          var nextComboSeq = combo ? (state.lastRemoteComboSeq || 0) + 1 : (state.lastRemoteComboSeq || 0);
+          state.lastRemoteComboSeq = nextComboSeq;
           setStatus(msg);
           updateUI();
 
           try {
-            await updateDoc(roomDocRef(state.roomCode), {
+            var payload = {
               p1Score: state.scores.p1,
               p2Score: state.scores.p2,
+              p1Shield: state.shields.p1,
+              p2Shield: state.shields.p2,
               bank: 0,
               turn: won ? who : nextTurn,
               lastRoller: who,
@@ -3452,7 +4281,12 @@
               status: won ? 'finished' : 'playing',
               statusText: msg,
               updatedAt: serverTimestamp()
-            });
+            };
+            if (combo) {
+              payload.comboSeq = nextComboSeq;
+              payload.comboData = Object.assign({ seat: who }, combo);
+            }
+            await updateDoc(roomDocRef(state.roomCode), payload);
           } catch (e) { console.error(e); }
 
           if (won) finishMatch(who);
@@ -3460,7 +4294,6 @@
         }
 
         updateUI();
-
         if (won) {
           finishMatch(who);
           return;
@@ -3474,9 +4307,47 @@
         if (state.busy || state.over || state.turn !== who) return;
         if (state.mode === 'online' && state.mySeat !== who) return;
 
-        var n = 1;
+        var cfg = getStageConfig();
         try {
-          n = await performRoll();
+          var dice = await performRoll();
+          var n = dice[0];
+          var n2 = dice.length > 1 ? dice[1] : 4;
+          var hasOne = dice.indexOf(1) !== -1;
+          var isSnakeEyes = dice.length === 2 && dice[0] === 1 && dice[1] === 1;
+
+          // One-Time Sweet Shield saves against a single Red 1!
+          if (hasOne && state.shields[who] > 0 && !isSnakeEyes) {
+            triggerShieldSave(who);
+            if (state.mode === 'online' && state.roomCode) {
+              var sRollSeq = (state.lastRemoteRollSeq || 0) + 1;
+              var sActSeq = Math.max(state.roomActionSeq || 0, state.lastRemoteActionSeq || 0) + 1;
+              var sComboSeq = (state.lastRemoteComboSeq || 0) + 1;
+              state.lastRemoteRollSeq = sRollSeq;
+              state.roomActionSeq = sActSeq;
+              state.lastRemoteActionSeq = sActSeq;
+              state.lastRemoteComboSeq = sComboSeq;
+              await updateDoc(roomDocRef(state.roomCode), {
+                rollSeq: sRollSeq,
+                actionSeq: sActSeq,
+                comboSeq: sComboSeq,
+                comboData: { seat: who, tier: 'shield', emoji: '🛡️', title: 'SWEET SHIELD!', sub: 'RED 1 BLOCKED!', spoken: 'Shield Save!' },
+                p1Shield: state.shields.p1,
+                p2Shield: state.shields.p2,
+                lastRoll: n,
+                lastRoll2: n2,
+                lastRoller: who,
+                bank: state.bank,
+                turn: who,
+                lastAction: 'shield_save',
+                statusText: '🛡️ ' + state.names[who] + "'s Sweet Shield saved +" + state.bank + '!',
+                updatedAt: serverTimestamp()
+              });
+            }
+            return;
+          }
+
+          var rollSum = dice.reduce(function (a, b) { return a + b; }, 0);
+          var sixBonus = ((state.mode === 'saga' || state.mode === 'online') && cfg.bonusOnSix && dice.indexOf(6) !== -1) ? cfg.bonusOnSix : 0;
 
           if (state.mode === 'online' && state.roomCode) {
             var nextSeq = (state.lastRemoteRollSeq || 0) + 1;
@@ -3484,73 +4355,130 @@
             state.lastRemoteRollSeq = nextSeq;
             state.roomActionSeq = nextActSeq;
             state.lastRemoteActionSeq = nextActSeq;
-            var nextTurnOnRoll = n === 1 ? (who === 'p1' ? 'p2' : 'p1') : who;
-            var nextBank = n === 1 ? 0 : state.bank + n;
-            var msg = n === 1
-              ? (state.names[who] + ' rolled a RED 1! Bank lost — ' + state.names[nextTurnOnRoll] + "'s turn.")
-              : (state.names[who] + ' rolled ' + n + ' (Current Turn: +' + nextBank + ')');
+            var nextTurnOnRoll = hasOne ? (who === 'p1' ? 'p2' : 'p1') : who;
+            var nextBank = hasOne ? 0 : state.bank + rollSum + sixBonus;
+            var rushCombo = null;
 
-            // Apply local state immediately before awaiting network write so UI never hangs
-            if (n === 1) {
-              await handleBust(who);
+            if (!hasOne && dice.some(function (v) { return v >= 5; })) {
+              state.highStreak++;
+              if (state.highStreak === 3) {
+                rushCombo = { seat: who, tier: 'rush', emoji: '⚡', title: 'SUGAR RUSH!', sub: '3 HIGH ROLLS IN A ROW!', spoken: 'Sugar Rush!' };
+                showComboSticker(rushCombo.tier, rushCombo.emoji, rushCombo.title, rushCombo.sub, rushCombo.spoken);
+              }
+            } else {
+              state.highStreak = 0;
+            }
+
+            var diceLabelOnline = dice.length === 2 ? (dice[0] + ' & ' + dice[1]) : String(n);
+            var bonusNoteOnline = sixBonus > 0 ? (' (+' + sixBonus + ' Volcano Spark!)') : '';
+            var msg = hasOne
+              ? (isSnakeEyes
+                  ? ('🐍 SNAKE EYES! ' + state.names[who] + ' lost ENTIRE saved score — ' + state.names[nextTurnOnRoll] + "'s turn!")
+                  : (state.names[who] + ' rolled a RED 1! Bank lost — ' + state.names[nextTurnOnRoll] + "'s turn."))
+              : (state.names[who] + ' rolled ' + diceLabelOnline + bonusNoteOnline + ' (Turn Bank: +' + nextBank + ')');
+
+            if (hasOne) {
+              await handleBust(who, isSnakeEyes);
+              startShotClock();
             } else {
               SoundFX.land();
               state.bank = nextBank;
               state.busy = false;
               setStatus(msg);
               updateUI();
+              startShotClock();
             }
 
-            await updateDoc(roomDocRef(state.roomCode), {
+            var onlineUpdate = {
               rollSeq: nextSeq,
               actionSeq: nextActSeq,
+              p1Score: state.scores.p1,
+              p2Score: state.scores.p2,
               lastRoll: n,
+              lastRoll2: n2,
               lastRoller: who,
               bank: nextBank,
               turn: nextTurnOnRoll,
-              lastAction: n === 1 ? 'bust_roll' : 'roll',
+              lastAction: hasOne ? 'bust_roll' : 'roll',
               statusText: msg,
               updatedAt: serverTimestamp()
-            });
+            };
+            if (rushCombo) {
+              var nextComboSeq = (state.lastRemoteComboSeq || 0) + 1;
+              state.lastRemoteComboSeq = nextComboSeq;
+              onlineUpdate.comboSeq = nextComboSeq;
+              onlineUpdate.comboData = rushCombo;
+            }
+
+            await updateDoc(roomDocRef(state.roomCode), onlineUpdate);
             return;
           }
 
-          if (n === 1) {
-            await handleBust(who);
+          if (hasOne) {
+            await handleBust(who, isSnakeEyes);
             return;
           }
 
           SoundFX.land();
-          state.bank += n;
+          state.bank += rollSum + sixBonus;
           state.busy = false;
-          setStatus(state.names[who] + ' rolled ' + n + ' (Current Turn: +' + state.bank + ')');
+
+          if (dice.some(function (v) { return v >= 5; })) {
+            state.highStreak++;
+            if (state.highStreak === 3) {
+              showComboSticker('rush', '⚡', 'SUGAR RUSH!', '3 HIGH ROLLS IN A ROW!', 'Sugar Rush!');
+            }
+          } else {
+            state.highStreak = 0;
+          }
+
+          var diceLabel = dice.length === 2 ? (dice[0] + ' & ' + dice[1]) : String(n);
+          var bonusNote = sixBonus > 0 ? (' (+' + sixBonus + ' Volcano Spark!)') : '';
+          setStatus(state.names[who] + ' rolled ' + diceLabel + bonusNote + ' (Turn Bank: +' + state.bank + ')');
           updateUI();
+          if (state.mode === 'saga') startShotClock();
         } catch (err) {
           state.busy = false;
           updateUI();
-          console.error('Roll error:', err);
         }
       }
 
       function finishMatch(winnerKey) {
+        stopShotClock();
         state.over = true;
         state.busy = false;
         updateUI();
 
-        var cpuWon = (state.mode === 'cpu' && winnerKey === 'p2');
+        var cfg = getStageConfig();
+        var cpuWon = (state.mode === 'saga' && winnerKey === 'p2');
         var onlineLost = (state.mode === 'online' && state.mySeat && winnerKey !== state.mySeat);
         var lostMatch = cpuWon || onlineLost;
+
+        // Credit +50 Coins to Winner (Online Winner, Solo Saga Winner, or Pass & Play Winner)
+        var rewardBanner = $('coinRewardBanner');
+        if (!lostMatch && !state.winRewardPaid) {
+          state.winRewardPaid = true;
+          var rewardAmt = cfg.winReward || 50;
+          adjustMyCoins(rewardAmt);
+          rewardBanner.textContent = '+' + rewardAmt + ' 🪙 Credited! Wallet: ' + myCoins + ' 🪙';
+          rewardBanner.style.borderColor = 'var(--lemon)';
+          rewardBanner.style.color = 'var(--lemon)';
+        } else if (lostMatch) {
+          rewardBanner.textContent = 'Opponent won +' + (cfg.winReward || 50) + ' 🪙 • Wallet: ' + myCoins + ' 🪙';
+          rewardBanner.style.borderColor = 'var(--rose)';
+          rewardBanner.style.color = 'var(--paper)';
+        }
 
         $('trophyBadge').classList.toggle('lose-badge', lostMatch);
 
         if (lostMatch) {
-          SoundFX.winComputer();
+          SoundFX.winLose();
         } else {
           SoundFX.winHuman();
           spawnConfetti();
         }
 
-        $('winnerTitle').textContent = cpuWon ? 'Computer Wins!' : (state.names[winnerKey] + ' Wins!');
+        $('winnerTitle').textContent = cpuWon ? (state.names.p2 + ' Wins!') : (state.names[winnerKey] + ' Wins!');
         $('vNameP1').textContent = state.names.p1;
         $('vScoreP1').textContent = state.scores.p1;
         $('vNameP2').textContent = state.names.p2;
@@ -3559,14 +4487,32 @@
         $('vCardP1').classList.toggle('winner', winnerKey === 'p1');
         $('vCardP2').classList.toggle('winner', winnerKey === 'p2');
 
-        var p1Score = state.scores.p1;
-        var p2Score = state.scores.p2;
-        var diff = p2Score - p1Score;
-        var pullPercent = Math.max(12, Math.min(88, 50 + (diff / TARGET) * 38));
+        var diff = state.scores.p2 - state.scores.p1;
+        var pullPercent = Math.max(12, Math.min(88, 50 + (diff / (state.target || 50)) * 38));
         $('tugFlag').style.left = pullPercent + '%';
         $('tugLabelLeft').textContent = state.names.p1;
         $('tugLabelRight').textContent = state.names.p2;
         $('tugMarginLabel').textContent = 'Lead: +' + Math.abs(diff) + ' pts';
+
+        // Auto-advance Saga Stage when a Saga match finishes
+        var playBtn = $('playAgainBtn');
+        if (state.mode === 'saga') {
+          var nextStageId = state.stageId < 4 ? state.stageId + 1 : 1;
+          var nextCfg = STAGES[nextStageId];
+          state.stageId = nextStageId;
+
+          $('stageGrid').querySelectorAll('.stage-card').forEach(function (c) {
+            c.classList.toggle('active-stage', Number(c.dataset.stage) === nextStageId);
+          });
+          $('sagaCardSub').textContent = 'Next Up: Stage ' + nextCfg.id + ' — ' + nextCfg.name;
+          playBtn.textContent = nextStageId === 1
+            ? ('Restart Stage 1 (' + nextCfg.entryFee + ' 🪙)')
+            : ('Next: Stage ' + nextCfg.id + ' ' + nextCfg.icon + ' (' + nextCfg.entryFee + ' 🪙)');
+        } else if (state.mode === 'online') {
+          playBtn.textContent = 'Rematch Stage ' + cfg.id + ' (' + cfg.entryFee + ' 🪙)';
+        } else {
+          playBtn.textContent = 'Play Again';
+        }
 
         $('victoryOverlay').hidden = false;
       }
@@ -3593,24 +4539,42 @@
       /* ----------------------------------------------------------------------
          Navigation & Match Lifecycle
          ---------------------------------------------------------------------- */
-      function startMatch(mode, p1Name, p2Name) {
+      function startMatch(mode, p1Name, p2Name, stageNum) {
+        var targetStageId = stageNum || state.stageId || 1;
+        var cfg = getStageConfig(targetStageId);
+
+        if (mode === 'saga' && myCoins < cfg.entryFee) {
+          setStatus('Need ' + cfg.entryFee + ' 🪙 to enter Stage ' + cfg.id + '!', true);
+          return;
+        }
+
         detachOnlineListener();
-        SoundFX.unlockAndPlayBgm();
+        stopShotClock();
+        SoundFX.unlock();
 
         state.mode = mode;
+        state.stageId = targetStageId;
+        state.target = mode === 'saga' ? cfg.target : 50;
         state.roomCode = null;
         state.mySeat = null;
+        state.winRewardPaid = false;
+
+        if (mode === 'saga' && cfg.entryFee > 0) {
+          adjustMyCoins(-cfg.entryFee);
+        }
         state.names.p1 = (p1Name || '').trim() || myDisplayName || 'Player 1';
-        state.names.p2 = mode === 'cpu' ? 'Computer' : ((p2Name || '').trim() || 'Player 2');
+        state.names.p2 = mode === 'saga' ? cfg.bossName : ((p2Name || '').trim() || 'Player 2');
         state.avatars.p1 = myAvatar || '🎲';
-        state.avatars.p2 = mode === 'cpu' ? '🤖' : '👤';
+        state.avatars.p2 = mode === 'saga' ? cfg.icon : '👤';
         state.scores = { p1: 0, p2: 0 };
+        state.shields = { p1: 1, p2: 1 };
+        state.highStreak = 0;
         state.bank = 0;
         state.turn = 'p1';
         state.busy = false;
         state.over = false;
 
-        if (mode === 'cpu') {
+        if (mode === 'saga') {
           state.flipped = false;
           $('zoneP2').classList.remove('flipped');
         }
@@ -3618,6 +4582,7 @@
         $('startScreen').hidden = true;
         $('onlineSheetBackdrop').hidden = true;
         $('friendSheetBackdrop').hidden = true;
+        $('sagaSheetBackdrop').hidden = true;
         $('victoryOverlay').hidden = true;
         $('arenaScreen').hidden = false;
         $('changeModeBtn').hidden = false;
@@ -3625,14 +4590,17 @@
         $('flipBtn').hidden = (mode !== 'friend');
 
         die.dataset.face = 5;
+        die2.dataset.face = 4;
         die.classList.remove('spin');
         wrap.classList.remove('toss');
         setStatus(state.names.p1 + "'s turn — Roll to start!");
         updateUI();
+        if (mode === 'saga') startShotClock();
       }
 
       function showModeScreen() {
         detachOnlineListener();
+        stopShotClock();
         state.over = true;
         state.busy = false;
         state.roomCode = null;
@@ -3641,6 +4609,7 @@
         $('victoryOverlay').hidden = true;
         $('onlineSheetBackdrop').hidden = true;
         $('friendSheetBackdrop').hidden = true;
+        $('sagaSheetBackdrop').hidden = true;
         $('changeModeBtn').hidden = true;
         $('flipBtn').hidden = true;
         $('roomBadgeBtn').hidden = true;
@@ -3657,17 +4626,9 @@
         var sheet = $(sheetId);
         var startY = 0;
 
-        $(closeBtnId).addEventListener('click', function () {
-          backdrop.hidden = true;
-        });
-
-        $(handleId).addEventListener('click', function () {
-          backdrop.hidden = true;
-        });
-
-        backdrop.addEventListener('click', function (e) {
-          if (e.target === backdrop) backdrop.hidden = true;
-        });
+        $(closeBtnId).addEventListener('click', function () { backdrop.hidden = true; });
+        $(handleId).addEventListener('click', function () { backdrop.hidden = true; });
+        backdrop.addEventListener('click', function (e) { if (e.target === backdrop) backdrop.hidden = true; });
 
         sheet.addEventListener('touchstart', function (e) {
           if (e.touches && e.touches.length === 1) startY = e.touches[0].clientY;
@@ -3675,8 +4636,7 @@
 
         sheet.addEventListener('touchend', function (e) {
           if (e.changedTouches && e.changedTouches.length === 1) {
-            var deltaY = e.changedTouches[0].clientY - startY;
-            if (deltaY > 65) backdrop.hidden = true;
+            if (e.changedTouches[0].clientY - startY > 65) backdrop.hidden = true;
           }
         }, { passive: true });
       }
@@ -3684,12 +4644,57 @@
       wireBottomSheetDismiss('onlineSheetBackdrop', 'onlinePanel', 'closeOnlineSheetBtn', 'onlineSheetHandle');
       wireBottomSheetDismiss('friendSheetBackdrop', 'friendForm', 'closeFriendSheetBtn', 'friendSheetHandle');
       wireBottomSheetDismiss('profileSheetBackdrop', 'profileForm', 'closeProfileSheetBtn', 'profileSheetHandle');
+      wireBottomSheetDismiss('sagaSheetBackdrop', 'sagaPanel', 'closeSagaSheetBtn', 'sagaSheetHandle');
 
-      // Profile Modal Controls (Name + Avatar)
-      $('profilePillBtn').addEventListener('click', function () {
-        syncProfileUI();
-        $('profileSheetBackdrop').hidden = false;
-        $('profileNameInput').focus();
+      // Saga Stages Selector Controls
+      $('btnChooseSaga').addEventListener('click', function () {
+        SoundFX.unlock();
+        $('btnChooseSaga').classList.add('selected');
+        $('btnChooseOnline').classList.remove('selected');
+        $('btnChooseFriend').classList.remove('selected');
+        $('sagaSheetBackdrop').hidden = false;
+      });
+
+      $('stageGrid').addEventListener('click', function (e) {
+        var card = e.target.closest('.stage-card');
+        if (!card) return;
+        var chosenStage = Number(card.dataset.stage) || 1;
+        var cfg = getStageConfig(chosenStage);
+        if (myCoins < cfg.entryFee) {
+          card.style.borderColor = 'var(--rose)';
+          setTimeout(function () { card.style.borderColor = ''; }, 700);
+          return;
+        }
+        $('stageGrid').querySelectorAll('.stage-card').forEach(function (c) {
+          c.classList.toggle('active-stage', c === card);
+        });
+        startMatch('saga', myDisplayName || 'You', null, chosenStage);
+      });
+
+      // Online Stage Selection Pill Bar
+      $('onlineStageSelector').addEventListener('click', function (e) {
+        var btn = e.target.closest('.stage-chip-btn');
+        if (!btn) return;
+        state.selectedOnlineStageId = Number(btn.dataset.stage) || 1;
+        setOnlineError('');
+        updateOnlineStageSelectionUI();
+      });
+
+      // Live Online Quick-Tap Emoji Reactions
+      $('reactionBar').addEventListener('click', async function (e) {
+        var btn = e.target.closest('.react-btn');
+        if (!btn || state.mode !== 'online' || !state.roomCode || !db) return;
+        var emoji = btn.dataset.emoji || '🔥';
+        var sender = state.mySeat === 'p2' ? state.names.p2 : state.names.p1;
+        spawnFloatingReaction(emoji, sender);
+        var nextReactSeq = (state.lastRemoteReactSeq || 0) + 1;
+        state.lastRemoteReactSeq = nextReactSeq;
+        try {
+          await updateDoc(roomDocRef(state.roomCode), {
+            reactSeq: nextReactSeq,
+            reactData: { seat: state.mySeat, emoji: emoji, name: sender }
+          });
+        } catch (err) {}
       });
 
       $('avatarGrid').addEventListener('click', function (e) {
@@ -3707,22 +4712,18 @@
       });
 
       // Online Mode Controls
-      $('onlineCountBtn').addEventListener('click', function () {
-        $('btnChooseOnline').click();
-      });
-
-      $('onlineNameInput').addEventListener('change', function () {
-        publishMyPresence();
-      });
+      $('onlineCountBtn').addEventListener('click', function () { $('btnChooseOnline').click(); });
 
       $('btnChooseOnline').addEventListener('click', function () {
-        SoundFX.unlockAndPlayBgm();
+        SoundFX.unlock();
         $('btnChooseOnline').classList.add('selected');
         $('btnChooseFriend').classList.remove('selected');
-        $('btnChooseCpu').classList.remove('selected');
+        $('btnChooseSaga').classList.remove('selected');
         $('friendSheetBackdrop').hidden = true;
+        $('sagaSheetBackdrop').hidden = true;
         $('onlineSheetBackdrop').hidden = false;
         setOnlineError('');
+        updateOnlineStageSelectionUI();
         publishMyPresence('available');
         renderOnlineUsersList();
       });
@@ -3745,7 +4746,6 @@
       });
 
       $('createRoomBtn').addEventListener('click', createOnlineRoom);
-
       $('joinRoomPane').addEventListener('submit', function (e) {
         e.preventDefault();
         joinOnlineRoom($('joinCodeInput').value);
@@ -3766,37 +4766,33 @@
         }
       }
 
-      $('copyCodeBtn').addEventListener('click', function () {
-        copyRoomCodeToClipboard(state.roomCode, this);
+      $('copyCodeBtn').addEventListener('click', function () { copyRoomCodeToClipboard(state.roomCode, this); });
+      $('roomBadgeBtn').addEventListener('click', function () { copyRoomCodeToClipboard(state.roomCode, this); });
+
+      // Profile Pill Trigger
+      $('profilePillBtn').addEventListener('click', function () {
+        SoundFX.unlock();
+        syncProfileUI();
+        $('profileSheetBackdrop').hidden = false;
+        $('profileNameInput').focus();
       });
 
-      $('roomBadgeBtn').addEventListener('click', function () {
-        copyRoomCodeToClipboard(state.roomCode, this);
-      });
-
-      // Local Friend & CPU Mode Controls
+      // Friend Mode
       $('btnChooseFriend').addEventListener('click', function () {
-        SoundFX.unlockAndPlayBgm();
+        SoundFX.unlock();
         $('btnChooseFriend').classList.add('selected');
         $('btnChooseOnline').classList.remove('selected');
-        $('btnChooseCpu').classList.remove('selected');
+        $('btnChooseSaga').classList.remove('selected');
         $('onlineSheetBackdrop').hidden = true;
+        $('sagaSheetBackdrop').hidden = true;
         $('friendSheetBackdrop').hidden = false;
+        $('p1Input').value = myDisplayName;
         $('p1Input').focus();
       });
 
       $('friendForm').addEventListener('submit', function (e) {
         e.preventDefault();
         startMatch('friend', $('p1Input').value, $('p2Input').value);
-      });
-
-      $('btnChooseCpu').addEventListener('click', function () {
-        $('btnChooseCpu').classList.add('selected');
-        $('btnChooseFriend').classList.remove('selected');
-        $('btnChooseOnline').classList.remove('selected');
-        $('friendSheetBackdrop').hidden = true;
-        $('onlineSheetBackdrop').hidden = true;
-        startMatch('cpu', myDisplayName || 'You', 'Computer');
       });
 
       $('rollP1').addEventListener('click', function () { handleHumanRoll('p1'); });
@@ -3810,10 +4806,15 @@
           handleHumanRoll(state.turn);
         }
       });
+      $('dieWrap2').addEventListener('click', function () {
+        if (state.turn === 'p1' || state.mode === 'friend') {
+          handleHumanRoll(state.turn);
+        }
+      });
 
-      // Settings Modal Controls
+      // Settings Modal
       $('settingsBtn').addEventListener('click', function () {
-        SoundFX.unlockAndPlayBgm();
+        SoundFX.unlock();
         $('settingsModalBackdrop').hidden = false;
         $('closeSettingsBtn').focus();
       });
@@ -3830,16 +4831,12 @@
         }
       });
 
-      $('bgmTrackSelect').addEventListener('change', function () {
-        SoundFX.setTrack(Number(this.value));
-      });
-
+      $('bgmTrackSelect').addEventListener('change', function () { SoundFX.setTrack(Number(this.value)); });
       $('bgmToggleBtn').addEventListener('click', function () {
         var on = SoundFX.toggleBgm();
         this.textContent = on ? 'ON' : 'OFF';
         this.classList.toggle('on', on);
       });
-
       $('sfxToggleBtn').addEventListener('click', function () {
         var on = SoundFX.toggleSfx();
         this.textContent = on ? 'ON' : 'OFF';
@@ -3854,15 +4851,23 @@
 
       $('playAgainBtn').addEventListener('click', async function () {
         if (state.mode === 'online' && state.roomCode && db) {
+          var cfg = getStageConfig();
+          if (myCoins < cfg.entryFee) {
+            setStatus('Need ' + cfg.entryFee + ' 🪙 for rematch!', true);
+            return;
+          }
           var nextActSeq = Math.max(state.roomActionSeq || 0, state.lastRemoteActionSeq || 0) + 1;
           state.roomActionSeq = nextActSeq;
           try {
             await updateDoc(roomDocRef(state.roomCode), {
               p1Score: 0,
               p2Score: 0,
+              p1Shield: 1,
+              p2Shield: 1,
               bank: 0,
               turn: 'p1',
               lastRoll: 5,
+              lastRoll2: 4,
               actionSeq: nextActSeq,
               lastAction: 'rematch',
               winner: null,
@@ -3870,10 +4875,10 @@
               statusText: state.names.p1 + "'s turn — Roll to start!",
               updatedAt: serverTimestamp()
             });
-          } catch (e) { console.error(e); }
+          } catch (e) {}
           return;
         }
-        startMatch(state.mode, state.names.p1, state.names.p2);
+        startMatch(state.mode, state.names.p1, state.names.p2, state.stageId);
       });
       $('victoryModeBtn').addEventListener('click', showModeScreen);
 
@@ -3889,16 +4894,14 @@
         }
       });
 
-      window.addEventListener('load', function () {
-        SoundFX.unlockAndPlayBgm();
-      });
       ['pointerdown', 'keydown'].forEach(function (evt) {
         document.addEventListener(evt, function firstGesture() {
-          SoundFX.unlockAndPlayBgm();
+          SoundFX.unlock();
           document.removeEventListener(evt, firstGesture);
         }, { once: true });
       });
 
+      syncProfileUI();
       buildDieFaces();
       makeSpecks();
     })();
